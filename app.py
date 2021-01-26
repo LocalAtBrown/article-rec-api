@@ -1,11 +1,39 @@
-from flask import Flask
+import logging
 
+import tornado.autoreload
+import tornado.web
+
+from handlers import recommendation, base
+from lib.config import config
 from db.helpers import get_article_by_external_id
 
-app = Flask(__name__)
+
+class Application(tornado.web.Application):
+    def __init__(self):
+        app_handlers = [
+            (r"^/$", base.HealthHandler),
+            (r"^/health/?$", base.HealthHandler),
+            (r"^/recs/?$", recommendation.RecHandler),
+        ]
+
+        super(Application, self).__init__(app_handlers, **app_settings)
 
 
-@app.route("/")
-def hello_world():
-    article = get_article_by_external_id(322144)
-    return f"Fetched article id {article['id']}: {article['title']}"
+if __name__ == "__main__":
+    app_settings = {
+        "default_handler_class": base.NotFoundHandler,
+        "debug": config.get("DEBUG"),
+    }
+
+    if config.get("DEBUG") is True:
+        tornado.autoreload.start()
+
+    logging_level = logging.getLevelName(config.get("LOG_LEVEL"))
+    logging.getLogger().setLevel(logging_level)
+
+    port = config.get("PORT")
+    logging.info(f"service is listening on port {port}")
+
+    http_server = tornado.httpserver.HTTPServer(request_callback=Application(), xheaders=True)
+    http_server.listen(port)
+    tornado.ioloop.IOLoop.current().start()

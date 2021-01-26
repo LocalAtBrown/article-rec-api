@@ -4,3 +4,4 @@ Flask
 uwsgi
 peewee
 psycopg2-binary
+tornado
