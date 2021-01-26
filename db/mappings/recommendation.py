@@ -9,7 +9,7 @@ class Rec(BaseMapping):
     class Meta:
         db_table = "recommendation"
 
-    external_id = TextField(null=False)
+    source_entity_id = TextField(null=False)
     model = ForeignKeyField(Model, null=False)
-    article = ForeignKeyField(Article, null=False)
+    recommended_article = ForeignKeyField(Article, null=False)
     score = DecimalField(max_digits=7, decimal_places=6)
