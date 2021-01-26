@@ -1,0 +1,4 @@
+-e file:.#egg=lib
+boto3
+Flask
+uwsgi

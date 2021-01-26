@@ -1,0 +1,4 @@
+.envrc
+.venv
+__pycache__
+*.egg-info
