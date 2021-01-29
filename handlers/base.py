@@ -84,6 +84,8 @@ class APIHandler(BaseHandler):
         self.set_status(code)
         self.set_header("Content-Type", "application/json")
 
+        if not 200 <= code < 300:
+            response = {"message": data}
         if not isinstance(data, str):
             response = json.dumps(data, default=default_serializer)
         self.finish(response)

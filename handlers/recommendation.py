@@ -1,6 +1,5 @@
 import operator
 from functools import reduce
-from decimal import Decimal
 
 from db.mappings.recommendation import Rec
 from handlers.base import APIHandler

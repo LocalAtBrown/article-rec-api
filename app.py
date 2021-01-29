@@ -5,7 +5,6 @@ import tornado.web
 
 from handlers import recommendation, base
 from lib.config import config
-from db.helpers import get_article_by_external_id
 
 
 class Application(tornado.web.Application):
