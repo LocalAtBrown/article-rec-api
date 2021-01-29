@@ -1,5 +1,6 @@
 import operator
 from functools import reduce
+from decimal import Decimal
 
 from db.mappings.recommendation import Rec
 from handlers.base import APIHandler
@@ -15,10 +16,12 @@ def unix_time_ms(datetime_instance):
     )
 
 
-def datetime_serializer(obj):
-    # TODO need to recursively serialize times on child fields
+def default_serializer(obj):
     if isinstance(obj, datetime.datetime):
         return int(unix_time_ms(obj) / 1000)  # unix seconds
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError(f"couldn't serialize obj: {obj}")
 
 
 class RecHandler(APIHandler):
@@ -52,5 +55,5 @@ class RecHandler(APIHandler):
         recs = [x.to_dict() for x in query]
 
         res = {"results": recs}
-        data = json.dumps(res, default=datetime_serializer)
+        data = json.dumps(res, default=default_serializer)
         self.finish(data)
