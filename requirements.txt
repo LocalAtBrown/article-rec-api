@@ -6,6 +6,8 @@
 #
 -e file:.#egg=lib
     # via -r requirements.in
+attrs==20.3.0
+    # via pytest
 boto3==1.16.5
     # via -r requirements.in
 botocore==1.19.5
@@ -16,6 +18,8 @@ click==7.1.2
     # via flask
 flask==1.1.2
     # via -r requirements.in
+iniconfig==1.1.1
+    # via pytest
 itsdangerous==1.1.0
     # via flask
 jinja2==2.11.2
@@ -26,9 +30,19 @@ jmespath==0.10.0
     #   botocore
 markupsafe==1.1.1
     # via jinja2
+packaging==20.9
+    # via pytest
 peewee==3.14.0
     # via -r requirements.in
+pluggy==0.13.1
+    # via pytest
 psycopg2-binary==2.8.6
+    # via -r requirements.in
+py==1.10.0
+    # via pytest
+pyparsing==2.4.7
+    # via packaging
+pytest==6.2.2
     # via -r requirements.in
 python-dateutil==2.8.1
     # via botocore
@@ -36,6 +50,8 @@ s3transfer==0.3.3
     # via boto3
 six==1.15.0
     # via python-dateutil
+toml==0.10.2
+    # via pytest
 tornado==6.1
     # via -r requirements.in
 urllib3==1.25.11

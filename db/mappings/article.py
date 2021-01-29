@@ -7,7 +7,7 @@ from db.mappings.base import BaseMapping
 
 class Article(BaseMapping):
     class Meta:
-        db_table = "article"
+        table_name = "article"
 
     external_id = IntegerField(null=False)
     title = TextField(null=False, default="")

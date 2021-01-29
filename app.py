@@ -7,6 +7,12 @@ from handlers import recommendation, base
 from lib.config import config
 
 
+APP_SETTINGS = {
+    "default_handler_class": base.NotFoundHandler,
+    "debug": config.get("DEBUG"),
+}
+
+
 class Application(tornado.web.Application):
     def __init__(self):
         app_handlers = [
@@ -15,14 +21,10 @@ class Application(tornado.web.Application):
             (r"^/recs/?$", recommendation.RecHandler),
         ]
 
-        super(Application, self).__init__(app_handlers, **app_settings)
+        super(Application, self).__init__(app_handlers, **APP_SETTINGS)
 
 
 if __name__ == "__main__":
-    app_settings = {
-        "default_handler_class": base.NotFoundHandler,
-        "debug": config.get("DEBUG"),
-    }
 
     if config.get("DEBUG") is True:
         tornado.autoreload.start()

@@ -1,10 +1,10 @@
 from typing import Dict
 import datetime
 
-from peewee import Model, DateTimeField
+from peewee import Model, DateTimeField, DatabaseProxy
 from playhouse.shortcuts import model_to_dict
 
-from lib.db import db
+db_proxy = DatabaseProxy()
 
 
 class BaseMapping(Model):
@@ -12,7 +12,7 @@ class BaseMapping(Model):
     updated_at = DateTimeField(null=False, default=datetime.datetime.now)
 
     class Meta:
-        database = db
+        database = db_proxy
 
     def to_dict(self):
         resource = model_to_dict(self)

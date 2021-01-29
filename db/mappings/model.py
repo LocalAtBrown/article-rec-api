@@ -19,7 +19,7 @@ class Status(enum.Enum):
 
 class Model(BaseMapping):
     class Meta:
-        db_table = "model"
+        table_name = "model"
 
     type = TextField(null=False)
     status = TextField(null=False, default=Status.PENDING.value)

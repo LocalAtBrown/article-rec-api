@@ -7,7 +7,7 @@ from db.mappings.article import Article
 
 class Rec(BaseMapping):
     class Meta:
-        db_table = "recommendation"
+        table_name = "recommendation"
 
     source_entity_id = TextField(null=False)
     model = ForeignKeyField(Model, null=False)
