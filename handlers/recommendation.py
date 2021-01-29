@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from db.mappings.recommendation import Rec
 from handlers.base import APIHandler
+from db.mappings.model import Model, Status
 
 import datetime
 import time
@@ -29,29 +30,36 @@ class RecHandler(APIHandler):
         self.mapping = Rec
         super(APIHandler, self).__init__(*args, **kwargs)
 
-    def apply_where_conditions(self, query, **filters):
+    def apply_conditions(self, query, **filters):
         clauses = []
+
+        if "source_entity_id" in filters:
+            clauses.append((self.mapping.source_entity_id == filters["source_entity_id"]))
 
         if "model_id" in filters:
             clauses.append((self.mapping.model_id == filters["model_id"]))
-
-        if "external_id" in filters:
-            clauses.append((self.mapping.model_id == filters["external_id"]))
-
-        if "id" in filters:
-            clauses.append((self.mapping.id == filters["id"]))
+        elif "model_type" in filters:
+            query = query.join(Model).where(
+                (Model.type == filters["model_type"]) & (Model.status == Status.CURRENT.value)
+            )
 
         if len(clauses):
             conditional = reduce(operator.and_, clauses)
             query = query.where(conditional)
+
+        if "sort_by" in filters:
+            sort_by_field = getattr(self.mapping, filters["sort_by"])
+            order_by_rule = sort_by_field.desc
+            if "order_by" in filters:
+                order_by_rule = getattr(sort_by_field, filters["order_by"])
+            query = query.order_by(order_by_rule())
 
         return query
 
     async def get(self):
         filters = {k: self.get_argument(k) for k in self.request.arguments}
         query = self.mapping.select()
-        query = self.apply_where_conditions(query, **filters)
-        # res = query.order_by(-self.mapping.score)
+        query = self.apply_conditions(query, **filters)
         recs = [x.to_dict() for x in query]
         res = {"results": recs}
         data = json.dumps(res, default=default_serializer)
