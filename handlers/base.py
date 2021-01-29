@@ -1,9 +1,26 @@
+import datetime
+import time
 import json
 import logging
 from typing import List
+from decimal import Decimal
 
 import tornado.web
 from tornado.httputil import HTTPHeaders
+
+
+def unix_time_ms(datetime_instance):
+    return int(
+        time.mktime(datetime_instance.timetuple()) * 1e3 + datetime_instance.microsecond / 1e3
+    )
+
+
+def default_serializer(obj):
+    if isinstance(obj, datetime.datetime):
+        return int(unix_time_ms(obj) / 1000)  # unix seconds
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError(f"couldn't serialize obj: {obj}")
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -40,8 +57,36 @@ class APIHandler(BaseHandler):
     """Base class for API handlers."""
 
     def __init__(self, *args, **kwargs):
-        self._json_body = None
         super(APIHandler, self).__init__(*args, **kwargs)
+
+    def get_arguments(self):
+        return {k: self.get_argument(k) for k in self.request.arguments}
+
+    def apply_sort(self, query, **filters):
+        DEFAULT_ORDER_BY = "desc"
+        if "sort_by" in filters:
+            sort_by_field = getattr(self.mapping, filters["sort_by"], None)
+            if not sort_by_field:
+                return query
+            default_order_rule = getattr(sort_by_field, DEFAULT_ORDER_BY)
+            order_by_rule = getattr(
+                sort_by_field, filters.get("order_by", DEFAULT_ORDER_BY), default_order_rule
+            )
+            query = query.order_by(order_by_rule())
+
+        return query
+
+    def apply_conditions(self, query, **filters):
+        """override for custom where logic"""
+        raise NotImplementedError
+
+    def api_response(self, data, code=200):
+        self.set_status(code)
+        self.set_header("Content-Type", "application/json")
+
+        if not isinstance(data, str):
+            response = json.dumps(data, default=default_serializer)
+        self.finish(response)
 
     def write_error(self, status_code, exc_info=None, **kwargs):
         """Write errors as a JSON response."""
@@ -61,23 +106,3 @@ class APIHandler(BaseHandler):
 
         self.set_status(status_code)
         self.finish({"message": msg})
-
-    @property
-    def json_body(self):
-        """Return parsed request body."""
-        if self._json_body:
-            return self._json_body
-
-        content_type = self.request.headers.get("Content-Type", "text/plain")
-        if not content_type.startswith("application/json"):
-            raise tornado.web.HTTPError(415, "INVALID_CONTENT_TYPE")
-
-        try:
-            self._json_body = self.parse_json(self.request.body)
-        except ValueError:
-            raise tornado.web.HTTPError(400, "INVALID_JSON")
-
-        return self._json_body
-
-    def parse_json(self, body):
-        return json.loads(body)
