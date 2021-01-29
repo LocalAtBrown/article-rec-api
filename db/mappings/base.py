@@ -1,3 +1,4 @@
+from typing import Dict
 import datetime
 
 from peewee import Model, DateTimeField
@@ -15,7 +16,13 @@ class BaseMapping(Model):
 
     def to_dict(self):
         resource = model_to_dict(self)
+        resource = self.format_datetime(resource)
+        return resource
+
+    def format_datetime(self, resource: Dict) -> Dict:
         for key in resource.keys():
             if isinstance(resource[key], datetime.datetime):
                 resource[key] = resource[key].isoformat()
+            elif isinstance(resource[key], dict):
+                resource[key] = self.format_datetime(resource[key])
         return resource

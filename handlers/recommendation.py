@@ -53,7 +53,6 @@ class RecHandler(APIHandler):
         query = self.apply_where_conditions(query, **filters)
         # res = query.order_by(-self.mapping.score)
         recs = [x.to_dict() for x in query]
-
         res = {"results": recs}
         data = json.dumps(res, default=default_serializer)
         self.finish(data)
