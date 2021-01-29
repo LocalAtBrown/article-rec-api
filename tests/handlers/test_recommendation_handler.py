@@ -2,8 +2,6 @@ import json
 
 import tornado.testing
 
-from tests.base import rollback_db
-
 # from tests.factories.recommendation import RecFactory
 from tests.base import BaseTest
 
@@ -11,9 +9,9 @@ from tests.base import BaseTest
 class TestRecHandler(BaseTest):
     _endpoint = "/drafts"
 
-    @rollback_db
+    @tornado.testing.gen_test
     async def test_get__source_entity_id(self):
-        assert 1 == 1
+        x = 1
         # source_entity_id = 1
         # RecFactory().create(source_entity_id=source_entity_id)
         # RecFactory().create(source_entity_id=2)
@@ -31,3 +29,7 @@ class TestRecHandler(BaseTest):
 
         # assert len(results["results"]) == 1
         # assert results["results"][0]["source_entity_id"] == source_entity_id
+
+    @tornado.testing.gen_test
+    async def test_get__model_id(self):
+        x = 1
