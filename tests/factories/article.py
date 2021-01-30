@@ -6,6 +6,9 @@ from db.mappings.article import Article
 
 class ArticleFactory(BaseFactory):
     mapping = Article
-    defaults = {
-        "external_id": str(randint(1000, 9000)),
-    }
+
+    @classmethod
+    def make_defaults(cls):
+        return {
+            "external_id": str(randint(1000, 9000)),
+        }

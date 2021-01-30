@@ -111,9 +111,8 @@ class TestRecHandler(BaseTest):
         RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
         RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
 
-        sort_by = "score"
         response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}?sort_by={sort_by}"),
+            self.get_url(f"{self._endpoint}?sort_by=score"),
             method="GET",
             raise_error=False,
         )
@@ -123,11 +122,29 @@ class TestRecHandler(BaseTest):
         results = json.loads(response.body)
         scores = [x["score"] for x in results["results"]]
         desc_scores = [x for x in reversed(sorted(scores))]
-        assert scores == desc_scores
+        self.assertListEqual(scores, desc_scores)
 
     @tornado.testing.gen_test
     async def test_get__order_by__overrides_default(self):
-        pass
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?sort_by=score&order_by=asc"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        scores = [x["score"] for x in results["results"]]
+        asc_scores = [x for x in sorted(scores)]
+        self.assertListEqual(scores, asc_scores)
 
     @tornado.testing.gen_test
     async def test_get__sort_by__invalid_ignored(self):

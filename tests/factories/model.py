@@ -4,7 +4,10 @@ from db.mappings.model import Model, Type, Status
 
 class ModelFactory(BaseFactory):
     mapping = Model
-    defaults = {
-        "type": Type.ARTICLE.value,
-        "status": Status.CURRENT.value,
-    }
+
+    @classmethod
+    def make_defaults(cls):
+        return {
+            "type": Type.ARTICLE.value,
+            "status": Status.CURRENT.value,
+        }
