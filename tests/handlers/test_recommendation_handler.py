@@ -12,7 +12,7 @@ class TestRecHandler(BaseTest):
     _endpoint = "/recs"
 
     @tornado.testing.gen_test
-    async def test_get__source_entity_id(self):
+    async def test_get__source_entity_id__filter(self):
         model = ModelFactory.create()
         article = ArticleFactory.create()
         RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
@@ -37,7 +37,7 @@ class TestRecHandler(BaseTest):
         assert results["results"][0]["source_entity_id"] == source_entity_id
 
     @tornado.testing.gen_test
-    async def test_get__model_id(self):
+    async def test_get__model_id__filter(self):
         article = ArticleFactory.create()
         first_mdl = ModelFactory.create()
         RecFactory.create(model_id=first_mdl["id"], recommended_article_id=article["id"])
@@ -56,3 +56,27 @@ class TestRecHandler(BaseTest):
 
         assert len(results["results"]) == 1
         assert results["results"][0]["model"]["id"] == first_mdl["id"]
+
+    @tornado.testing.gen_test
+    async def test_get__model_type__overrides_model_id(self):
+        pass
+
+    @tornado.testing.gen_test
+    async def test_get__model_type__pulls_current_model(self):
+        pass
+
+    @tornado.testing.gen_test
+    async def test_get__sort_by__defaults_to_desc(self):
+        pass
+
+    @tornado.testing.gen_test
+    async def test_get__order_by__overrides_default(self):
+        pass
+
+    @tornado.testing.gen_test
+    async def test_get__sort_by__invalid_ignored(self):
+        pass
+
+    @tornado.testing.gen_test
+    async def test_get__order_by__invalid_ignored(self):
+        pass
