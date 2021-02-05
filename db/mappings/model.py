@@ -6,8 +6,8 @@ from db.mappings.base import BaseMapping
 
 
 class Type(enum.Enum):
-    # in the future, we imagine supporting 'user' and 'cluster' types
     ARTICLE = "article"
+    USER = "user"
 
 
 class Status(enum.Enum):
@@ -19,7 +19,7 @@ class Status(enum.Enum):
 
 class Model(BaseMapping):
     class Meta:
-        db_table = "model"
+        table_name = "model"
 
     type = TextField(null=False)
     status = TextField(null=False, default=Status.PENDING.value)

@@ -19,6 +19,15 @@ export class AppStack extends cdk.Stack {
     const taskRole = new iam.Role(this, `${id}Role`, {
       assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
       inlinePolicies: {
+        SecretsManagerAccess: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              sid: `SecretsManagerAccess`,
+              actions: ["secretsmanager:Get*"],
+              resources: ["*"],
+            }),
+          ],
+        }),
         SSMAccess: new iam.PolicyDocument({
           statements: [
             new iam.PolicyStatement({
