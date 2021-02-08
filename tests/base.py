@@ -2,6 +2,7 @@ import functools
 
 import tornado.testing
 from tornado.concurrent import Future
+from peewee import SqliteDatabase
 
 from app import Application
 from db.mappings import database
@@ -29,5 +30,6 @@ class BaseTest(tornado.testing.AsyncHTTPTestCase):
         return future
 
     def setUp(self):
+        assert isinstance(database, SqliteDatabase), "database must be sqlite for tests"
         recreate_tables(database)
         super().setUp()
