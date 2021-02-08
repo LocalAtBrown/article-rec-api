@@ -211,4 +211,32 @@ class TestRecHandler(BaseTest):
 
         results = json.loads(response.body)
         article_rec_ids = [x["recommended_article"]["id"] for x in results["results"]]
-        self.assertListEqual(article_rec_ids, [not_excluded["id"], not_excluded["id"]])
+        self.assertListEqual(article_rec_ids, [not_excluded["id"]] * 2)
+
+    @tornado.testing.gen_test
+    async def test_get__exclude__works_with_model_type(self):
+        not_excluded = ArticleFactory.create()
+        user_mdl = ModelFactory.create(type=Type.USER.value, status=Status.CURRENT.value)
+        RecFactory.create(model_id=user_mdl["id"], recommended_article_id=not_excluded["id"])
+
+        excluded_1 = ArticleFactory.create()
+        excluded_2 = ArticleFactory.create()
+        article_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.CURRENT.value)
+        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=excluded_1["id"])
+        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=excluded_2["id"])
+        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=not_excluded["id"])
+
+        response = await self.http_client.fetch(
+            self.get_url(
+                f"{self._endpoint}?exclude={excluded_1['external_id']},{excluded_2['external_id']}&model_type={Type.ARTICLE.value}"
+            ),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        assert len(results["results"]) == 1
+        assert results["results"][0]["recommended_article"]["id"] == not_excluded["id"]
+        assert results["results"][0]["model"]["id"] == article_mdl["id"]
