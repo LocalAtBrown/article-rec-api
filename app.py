@@ -3,7 +3,7 @@ import logging
 import tornado.autoreload
 import tornado.web
 
-from handlers import recommendation, base
+from handlers import recommendation, base, model
 from lib.config import config
 
 
@@ -19,6 +19,7 @@ class Application(tornado.web.Application):
             (r"^/$", base.HealthHandler),
             (r"^/health/?$", base.HealthHandler),
             (r"^/recs/?$", recommendation.RecHandler),
+            (r"^/models/?$", model.ModelHandler),
         ]
 
         super(Application, self).__init__(app_handlers, **APP_SETTINGS)
