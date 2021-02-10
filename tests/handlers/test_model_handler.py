@@ -4,7 +4,8 @@ import tornado.testing
 
 from tests.factories.model import ModelFactory
 from tests.base import BaseTest
-from db.mappings.model import Type, Status
+from db.mappings.model import Type, Status, Model
+from db.helpers import get_resource
 from lib.config import config
 
 
@@ -81,3 +82,23 @@ class TestModelHandler(BaseTest):
         )
 
         assert response.code == 404
+
+    @tornado.testing.gen_test
+    async def test_patch__good_admin_token__updates_resource(self):
+        old_current = ModelFactory.create(status=Status.CURRENT.value)
+        new_current = ModelFactory.create(status=Status.STALE.value)
+
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}/{new_current['id']}/make_current"),
+            method="PATCH",
+            raise_error=False,
+            allow_nonstandard_methods=True,
+            headers={"Authorization": config.get("ADMIN_TOKEN")},
+        )
+
+        assert response.code == 200
+
+        old_current = get_resource(Model, old_current["id"])
+        new_current = get_resource(Model, new_current["id"])
+        assert old_current["status"] == Status.STALE.value
+        assert new_current["status"] == Status.CURRENT.value
