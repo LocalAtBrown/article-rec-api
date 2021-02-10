@@ -37,6 +37,10 @@ class ModelHandler(APIHandler):
         self.api_response(res)
 
     async def patch(self, resource_id):
+        # TODO if a new current model is specified,
+        # add logic to reset old current model to stale
+        # TODO add @admin wrapper
+        # TODO move generalized logic into parent class
         update_resource(self.mapping, resource_id, **self.json_body)
         resource = get_resource(self.mapping, resource_id)
         self.api_response(resource)
