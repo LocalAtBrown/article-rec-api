@@ -83,7 +83,7 @@ class APIHandler(BaseHandler):
     def api_response(self, data, code=200):
         self.set_status(code)
         self.set_header("Content-Type", "application/json")
-        self.add_header("Access-Control-Allow-Origin", "https://washingtoncitypaper.com")
+        self.add_header("Access-Control-Allow-Origin", "*")
         self.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
         if not 200 <= code < 300:
