@@ -123,25 +123,6 @@ class APIHandler(BaseHandler):
         """override for custom where logic"""
         raise NotImplementedError
 
-    @property
-    def json_body(self):
-        if not hasattr(self, "_json_body"):
-            content_type, _ = cgi.parse_header(self.request.headers["Content-Type"])
-            if content_type != "application/json":
-                raise tornado.web.HTTPError(400, "INVALID_CONTENT_TYPE")
-
-            try:
-                input_data = json.loads(self.request.body)
-            except ValueError:
-                input_data = None
-
-            if not isinstance(input_data, dict):
-                logging.error("invalid JSON: %r", self.request.body)
-                raise tornado.web.HTTPError(400, "INVALID_JSON")
-
-            self._json_body = input_data
-        return self._json_body
-
     def api_response(self, data, code=200):
         self.set_status(code)
         self.set_header("Content-Type", "application/json")
