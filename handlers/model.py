@@ -3,6 +3,7 @@ from functools import reduce
 
 from handlers.base import APIHandler
 from db.mappings.model import Model, Status
+from db.helpers import update_resource, get_resource
 
 
 class ModelHandler(APIHandler):
@@ -34,3 +35,8 @@ class ModelHandler(APIHandler):
             "results": [x.to_dict() for x in query],
         }
         self.api_response(res)
+
+    async def patch(self, resource_id):
+        update_resource(self.mapping, resource_id, **self.json_body)
+        resource = get_resource(self.mapping, resource_id)
+        self.api_response(resource)

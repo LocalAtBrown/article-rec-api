@@ -1,4 +1,5 @@
 import re
+import cgi
 import datetime
 import time
 import json
@@ -14,7 +15,8 @@ from lib.metrics import write_metric, Unit
 
 def unix_time_ms(datetime_instance):
     return int(
-        time.mktime(datetime_instance.timetuple()) * 1e3 + datetime_instance.microsecond / 1e3
+        time.mktime(datetime_instance.timetuple()) * 1e3
+        + datetime_instance.microsecond / 1e3
     )
 
 
@@ -109,7 +111,9 @@ class APIHandler(BaseHandler):
                 return query
             default_order_rule = getattr(sort_by_field, DEFAULT_ORDER_BY)
             order_by_rule = getattr(
-                sort_by_field, filters.get("order_by", DEFAULT_ORDER_BY), default_order_rule
+                sort_by_field,
+                filters.get("order_by", DEFAULT_ORDER_BY),
+                default_order_rule,
             )
             query = query.order_by(order_by_rule())
 
@@ -118,6 +122,25 @@ class APIHandler(BaseHandler):
     def apply_conditions(self, query, **filters):
         """override for custom where logic"""
         raise NotImplementedError
+
+    @property
+    def json_body(self):
+        if not hasattr(self, "_json_body"):
+            content_type, _ = cgi.parse_header(self.request.headers["Content-Type"])
+            if content_type != "application/json":
+                raise tornado.web.HTTPError(400, "INVALID_CONTENT_TYPE")
+
+            try:
+                input_data = json.loads(self.request.body)
+            except ValueError:
+                input_data = None
+
+            if not isinstance(input_data, dict):
+                logging.error("invalid JSON: %r", self.request.body)
+                raise tornado.web.HTTPError(400, "INVALID_JSON")
+
+            self._json_body = input_data
+        return self._json_body
 
     def api_response(self, data, code=200):
         self.set_status(code)
