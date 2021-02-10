@@ -3,7 +3,7 @@ from functools import reduce
 
 from handlers.base import APIHandler
 from db.mappings.model import Model, Status
-from db.helpers import update_resource, get_resource
+from db.helpers import get_resource
 
 
 class ModelHandler(APIHandler):
@@ -36,11 +36,9 @@ class ModelHandler(APIHandler):
         }
         self.api_response(res)
 
-    async def patch(self, resource_id):
-        # TODO if a new current model is specified,
-        # add logic to reset old current model to stale
-        # TODO add @admin wrapper
-        # TODO move generalized logic into parent class
-        update_resource(self.mapping, resource_id, **self.json_body)
-        resource = get_resource(self.mapping, resource_id)
+    # TODO add @admin wrapper
+    async def patch(self, _id):
+        resource = get_resource(self.mapping, _id)
+        self.mapping.set_current(_id, resource["type"])
+        resource = get_resource(self.mapping, _id)
         self.api_response(resource)

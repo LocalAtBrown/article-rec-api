@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from peewee import Expression
+
 from db.mappings.base import BaseMapping
 
 
@@ -14,7 +16,7 @@ def get_resource(mapping_class: BaseMapping, _id: int) -> dict:
     return instance.to_dict()
 
 
-def update_resource(mapping_class: BaseMapping, resource_id: int, **params: dict) -> None:
+def update_resources(mapping_class: BaseMapping, conditions: Expression, **params: dict) -> None:
     params["updated_at"] = datetime.now()
-    q = mapping_class.update(**params).where(mapping_class.id == resource_id)
+    q = mapping_class.update(**params).where(conditions)
     q.execute()
