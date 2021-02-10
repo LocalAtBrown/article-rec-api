@@ -22,7 +22,7 @@ class Application(tornado.web.Application):
             (r"^/health/?$", base.HealthHandler),
             (r"^/recs/?$", recommendation.RecHandler),
             (r"^/models/?$", model.ModelHandler),
-            (r"^/models/(\d+)/make_current?", model.ModelHandler),
+            (r"^/models/(\d+)/make_current/?", model.ModelHandler),
         ]
 
         super(Application, self).__init__(app_handlers, **APP_SETTINGS)
