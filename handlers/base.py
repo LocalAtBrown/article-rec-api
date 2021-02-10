@@ -11,6 +11,7 @@ import tornado.web
 from tornado.httputil import HTTPHeaders
 
 from lib.metrics import write_metric, Unit
+from lib.config import config
 
 
 def unix_time_ms(datetime_instance):
@@ -40,6 +41,20 @@ class LatencyBuffer:
         _buffer = cls._buffer
         cls._buffer = []
         return _buffer
+
+
+def admin_only(f):
+    def decorated(self, *args, **kwargs):
+        admin_token = self.request.headers.get("Authorization")
+        if not admin_token:
+            logging.error("admin: missing admin token")
+            raise tornado.web.HTTPError(401, "MISSING_ADMIN_TOKEN")
+        if admin_token != config.get("ADMIN_TOKEN"):
+            logging.error("admin: invalid admin token")
+            raise tornado.web.HTTPError(403, "INVALID_ADMIN_TOKEN")
+        return f(self, *args, **kwargs)
+
+    return decorated
 
 
 class BaseHandler(tornado.web.RequestHandler):

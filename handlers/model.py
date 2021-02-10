@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 
-from handlers.base import APIHandler
+from handlers.base import APIHandler, admin_only
 from db.mappings.model import Model, Status
 from db.helpers import get_resource
 
@@ -36,7 +36,7 @@ class ModelHandler(APIHandler):
         }
         self.api_response(res)
 
-    # TODO add @admin wrapper
+    @admin_only
     async def patch(self, _id):
         resource = get_resource(self.mapping, _id)
         self.mapping.set_current(_id, resource["type"])
