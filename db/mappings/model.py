@@ -8,6 +8,7 @@ from db.mappings.base import BaseMapping
 class Type(enum.Enum):
     ARTICLE = "article"
     USER = "user"
+    POPULARITY = "popularity"
 
 
 class Status(enum.Enum):
