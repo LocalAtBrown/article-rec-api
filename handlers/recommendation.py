@@ -18,9 +18,16 @@ class DefaultRecs:
     @classmethod
     def get_recs(cls):
         if cls.should_refresh():
-            _last_updated = datetime.now()
+            query = (
+                Recs.select()
+                .join(Model, on=(Model.id == Rec.model))
+                .where((Model.type == DEFAULT_TYPE) & (Model.status == Status.CURRENT.value))
+                .order_by(Rec.score.desc())
+            )
+            cls._recs = [x.to_dict() for x in query]
+            cls._last_updated = datetime.now()
 
-        return _recs
+        return cls._recs
 
     @classmethod
     def should_refresh(cls):
