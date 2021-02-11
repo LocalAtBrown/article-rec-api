@@ -19,9 +19,9 @@ class DefaultRecs:
     def get_recs(cls):
         if cls.should_refresh():
             query = (
-                Recs.select()
+                Rec.select()
                 .join(Model, on=(Model.id == Rec.model))
-                .where((Model.type == DEFAULT_TYPE) & (Model.status == Status.CURRENT.value))
+                .where((Model.type == cls.DEFAULT_TYPE) & (Model.status == Status.CURRENT.value))
                 .order_by(Rec.score.desc())
             )
             cls._recs = [x.to_dict() for x in query]
