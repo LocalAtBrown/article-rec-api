@@ -51,7 +51,7 @@ class TestModelHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_patch__no_admin_token__throws_error(self):
         response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}/1/make_current"),
+            self.get_url(f"{self._endpoint}/1/set_current"),
             method="PATCH",
             raise_error=False,
             allow_nonstandard_methods=True,
@@ -62,7 +62,7 @@ class TestModelHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_patch__wrong_admin_token__throws_error(self):
         response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}/1/make_current"),
+            self.get_url(f"{self._endpoint}/1/set_current"),
             method="PATCH",
             raise_error=False,
             allow_nonstandard_methods=True,
@@ -74,7 +74,7 @@ class TestModelHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_patch__missing_resource__throws_error(self):
         response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}/1/make_current"),
+            self.get_url(f"{self._endpoint}/1/set_current"),
             method="PATCH",
             raise_error=False,
             allow_nonstandard_methods=True,
@@ -89,7 +89,7 @@ class TestModelHandler(BaseTest):
         new_current = ModelFactory.create(status=Status.STALE.value)
 
         response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}/{new_current['id']}/make_current"),
+            self.get_url(f"{self._endpoint}/{new_current['id']}/set_current"),
             method="PATCH",
             raise_error=False,
             allow_nonstandard_methods=True,
