@@ -240,3 +240,30 @@ class TestRecHandler(BaseTest):
         assert len(results["results"]) == 1
         assert results["results"][0]["recommended_article"]["id"] == not_excluded["id"]
         assert results["results"][0]["model"]["id"] == article_mdl["id"]
+
+    @tornado.testing.gen_test
+    async def test_get__unseen_source_entity_id__returns_defaults(self):
+        article = ArticleFactory.create()
+        article_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.CURRENT.value)
+        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=article["id"])
+
+        article = ArticleFactory.create()
+        default_mdl = ModelFactory.create(type=Type.POPULARITY.value, status=Status.CURRENT.value)
+        default_rec = RecFactory.create(
+            model_id=default_mdl["id"], recommended_article_id=article["id"]
+        )
+
+        response = await self.http_client.fetch(
+            self.get_url(
+                f"{self._endpoint}?source_entity_id=unseen&model_type={Type.ARTICLE.value}"
+            ),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        assert len(results["results"]) == 1
+        assert results["results"][0]["model"]["id"] == default_mdl["id"]
+        assert results["results"][0]["id"] == default_rec["id"]
