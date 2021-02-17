@@ -34,7 +34,7 @@ class DefaultRecs:
         if not cls._recs:
             return True
         # add random jitter to prevent multiple unneeded db hits at the same time
-        jitter_sec = randint(30)
+        jitter_sec = randint(1, 30)
         stale_threshold = datetime.now() - timedelta(
             minutes=cls.STALE_AFTER_MIN, seconds=jitter_sec
         )
