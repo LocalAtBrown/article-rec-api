@@ -32,7 +32,8 @@ async def write_latency_metrics():
     while True:
         await asyncio.sleep(INTERVAL_MIN * 60)
         latencies = base.LatencyBuffer.flush()
-        write_aggregate_metrics("aggregate_latency", Unit.MILLISECONDS, latencies)
+        if latencies:
+            write_aggregate_metrics("aggregate_latency", Unit.MILLISECONDS, latencies)
 
 
 if __name__ == "__main__":
