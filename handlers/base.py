@@ -67,10 +67,10 @@ class BaseHandler(tornado.web.RequestHandler):
             "request_method": self.request.method,
             "status_code": self._status_code,
         }
-        write_metric("error_request_time", latency, unit=Unit.SECONDS, tags=tags)
+        write_metric("error_request_time", latency, unit=Unit.MILLISECONDS, tags=tags)
 
     def on_finish(self):
-        latency = time.time() - self.start_time
+        latency = (time.time() - self.start_time) * 1000
         if not 200 <= self._status_code < 300:
             self.write_error_metric(latency)
         else:
