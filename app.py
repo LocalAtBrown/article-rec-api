@@ -1,10 +1,12 @@
 import logging
+import asyncio
 
 import tornado.autoreload
 import tornado.web
 
 from handlers import recommendation, base, model
 from lib.config import config
+from lib.metrics import write_aggregate_metrics, Unit
 
 
 APP_SETTINGS = {
@@ -25,8 +27,15 @@ class Application(tornado.web.Application):
         super(Application, self).__init__(app_handlers, **APP_SETTINGS)
 
 
-if __name__ == "__main__":
+async def write_latency_metrics():
+    INTERVAL_MIN = 1
+    while True:
+        await asyncio.sleep(INTERVAL_MIN * 60)
+        latencies = base.LatencyBuffer.flush()
+        write_aggregate_metrics("aggregate_latency", Unit.SECONDS, latencies)
 
+
+if __name__ == "__main__":
     if config.get("DEBUG") is True:
         tornado.autoreload.start()
 
@@ -36,6 +45,10 @@ if __name__ == "__main__":
     port = config.get("PORT")
     logging.info(f"service is listening on port {port}")
 
-    http_server = tornado.httpserver.HTTPServer(request_callback=Application(), xheaders=True)
+    http_server = tornado.httpserver.HTTPServer(
+        request_callback=Application(), xheaders=True
+    )
     http_server.listen(port)
-    tornado.ioloop.IOLoop.current().start()
+    io_loop = tornado.ioloop.IOLoop.current()
+    io_loop.add_callback(write_latency_metrics)
+    io_loop.start()
