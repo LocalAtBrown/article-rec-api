@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import logging
 
 import boto3
@@ -61,6 +61,32 @@ def write_metric(
                 "MetricName": name,
                 "Dimensions": formatted_tags,
                 "Value": value,
+                "Unit": unit,
+            },
+        ],
+    )
+
+
+def write_aggregate_metrics(
+    name: str, unit: str = Unit.COUNT, values=List[float]
+) -> None:
+    if STAGE == "local":
+        logging.info(
+            f"Skipping aggregate metric write for name:{name} | values:{values}"
+        )
+        return
+
+    client.put_metric_data(
+        Namespace=SERVICE,
+        MetricData=[
+            {
+                "MetricName": name,
+                "StatisticValues": {
+                    "SampleCount": len(values),
+                    "Sum": sum(values),
+                    "Minimum": min(values),
+                    "Maximum": max(values),
+                },
                 "Unit": unit,
             },
         ],
