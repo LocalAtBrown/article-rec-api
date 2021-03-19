@@ -1,3 +1,4 @@
+import re
 import datetime
 import time
 import json
@@ -7,6 +8,8 @@ from decimal import Decimal
 
 import tornado.web
 from tornado.httputil import HTTPHeaders
+
+from lib.metrics import write_metric, Unit
 
 
 def unix_time_ms(datetime_instance):
@@ -36,6 +39,26 @@ class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         super(BaseHandler, self).set_default_headers()
         self.clear_header("Server")
+
+    @property
+    def handler_name(self):
+        return re.sub(r"Handler$", "", self.__class__.__name__)
+
+    def prepare(self):
+        self.start_time = time.time()
+
+    def write_error_metric(self):
+        tags = {
+            "handler": self.handler_name,
+            "request_method": self.request.method,
+            "status_code": self._status_code,
+        }
+        latency = time.time() - self.start_time
+        write_metric("error_request_time", latency, unit=Unit.SECONDS, tags=tags)
+
+    def on_finish(self):
+        if not 200 <= self._status_code < 300:
+            self.write_error_metric()
 
 
 class NotFoundHandler(BaseHandler):
