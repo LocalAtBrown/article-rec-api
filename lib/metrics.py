@@ -52,7 +52,7 @@ def write_metric(
     default_tags = {"stage": STAGE}
     if tags:
         default_tags.update(tags)
-    formatted_tags = [{"Name": k, "Value": v} for k, v in default_tags.items()]
+    formatted_tags = [{"Name": k, "Value": str(v)} for k, v in default_tags.items()]
 
     client.put_metric_data(
         Namespace=SERVICE,
@@ -81,7 +81,7 @@ def write_aggregate_metrics(
     default_tags = {"stage": STAGE}
     if tags:
         default_tags.update(tags)
-    formatted_tags = [{"Name": k, "Value": v} for k, v in default_tags.items()]
+    formatted_tags = [{"Name": k, "Value": str(v)} for k, v in default_tags.items()]
 
     client.put_metric_data(
         Namespace=SERVICE,
