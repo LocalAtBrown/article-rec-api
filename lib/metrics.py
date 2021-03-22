@@ -68,19 +68,27 @@ def write_metric(
 
 
 def write_aggregate_metrics(
-    name: str, unit: str = Unit.COUNT, values=List[float]
+    name: str,
+    values: List[float],
+    unit: str = Unit.COUNT,
+    tags: Dict[str, str] = None,
 ) -> None:
     if STAGE == "local":
         logging.info(
             f"Skipping aggregate metric write for name:{name} | values:{values}"
         )
         return
+    default_tags = {"stage": STAGE}
+    if tags:
+        default_tags.update(tags)
+    formatted_tags = [{"Name": k, "Value": v} for k, v in default_tags.items()]
 
     client.put_metric_data(
         Namespace=SERVICE,
         MetricData=[
             {
                 "MetricName": name,
+                "Dimensions": formatted_tags,
                 "StatisticValues": {
                     "SampleCount": len(values),
                     "Sum": sum(values),
