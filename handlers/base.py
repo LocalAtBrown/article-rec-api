@@ -1,3 +1,4 @@
+import re
 import datetime
 import time
 import json
@@ -7,6 +8,8 @@ from decimal import Decimal
 
 import tornado.web
 from tornado.httputil import HTTPHeaders
+
+from lib.metrics import write_metric, Unit
 
 
 def unix_time_ms(datetime_instance):
@@ -23,6 +26,20 @@ def default_serializer(obj):
     raise TypeError(f"couldn't serialize obj: {obj}")
 
 
+class LatencyBuffer:
+    _buffer = []
+
+    @classmethod
+    def push(cls, latency):
+        cls._buffer.append(latency)
+
+    @classmethod
+    def flush(cls):
+        _buffer = cls._buffer
+        cls._buffer = []
+        return _buffer
+
+
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self, *args, **kwargs):
         super(BaseHandler, self).initialize(*args, **kwargs)
@@ -36,6 +53,28 @@ class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         super(BaseHandler, self).set_default_headers()
         self.clear_header("Server")
+
+    @property
+    def handler_name(self):
+        return self.__class__.__name__.removesuffix("Handler")
+
+    def prepare(self):
+        self.start_time = time.time()
+
+    def write_error_metric(self, latency: float):
+        tags = {
+            "handler": self.handler_name,
+            "request_method": self.request.method,
+            "status_code": self._status_code,
+        }
+        write_metric("error_request_time", latency, unit=Unit.MILLISECONDS, tags=tags)
+
+    def on_finish(self):
+        latency = (time.time() - self.start_time) * 1000
+        if not 200 <= self._status_code < 300:
+            self.write_error_metric(latency)
+        else:
+            LatencyBuffer.push(latency)
 
 
 class NotFoundHandler(BaseHandler):
