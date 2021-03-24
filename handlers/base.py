@@ -56,7 +56,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     @property
     def handler_name(self):
-        return re.sub(r"Handler$", "", self.__class__.__name__)
+        return self.__class__.__name__.removesuffix("Handler")
 
     def prepare(self):
         self.start_time = time.time()
