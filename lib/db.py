@@ -1,4 +1,4 @@
-from peewee import PostgresqlDatabase
+from playhouse.pool import PooledPostgresqlExtDatabase
 
 from lib.config import config, REGION
 from lib.secrets_manager import get_secret
@@ -11,4 +11,12 @@ PORT = DB_CONFIG["port"]
 HOST = DB_CONFIG["host"]
 USER = DB_CONFIG["username"]
 
-db = PostgresqlDatabase(NAME, user=USER, password=PASSWORD, host=HOST, port=PORT)
+db = PooledPostgresqlExtDatabase(
+    NAME,
+    user=USER,
+    password=PASSWORD,
+    host=HOST,
+    port=PORT,
+    max_connections=20,
+    stale_timeout=300,  # connections time out after 5 minutes
+)
