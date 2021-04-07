@@ -77,7 +77,7 @@ export class AppStack extends cdk.Stack {
       cluster,
       cpu: 1024, // 1 entire vCPU (half the capacity of t3.small)
       memoryLimitMiB: 1024, // 1 gb memory (half the capcity of t3.small)
-      desiredCount: 1,
+      desiredCount: 3,
       domainName,
       domainZone,
       certificate,
