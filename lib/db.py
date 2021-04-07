@@ -17,6 +17,6 @@ db = PooledPostgresqlExtDatabase(
     password=PASSWORD,
     host=HOST,
     port=PORT,
-    max_connections=20,
+    max_connections=config.get("MAX_DB_CONNECTIONS"),
     stale_timeout=300,  # connections time out after 5 minutes
 )
