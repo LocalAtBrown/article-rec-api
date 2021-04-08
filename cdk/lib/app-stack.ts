@@ -59,21 +59,25 @@ export class AppStack extends cdk.Stack {
     });
 
     const domainZone = route53.HostedZone.fromLookup(this, `${id}HostedZone`, {
-      domainName: 'localnewslab.io'
+      domainName: "localnewslab.io",
     });
 
     let domainName = "article-rec-api";
     if (props.stage == helpers.STAGE.DEVELOPMENT) {
-      domainName = 'dev-' + domainName;
+      domainName = "dev-" + domainName;
     }
 
-    const certificate = acm.Certificate.fromCertificateArn(this, `${id}Certificate`, cdk.Fn.importValue("LocalNewsLab-certificate-arn"));
+    const certificate = acm.Certificate.fromCertificateArn(
+      this,
+      `${id}Certificate`,
+      cdk.Fn.importValue("LocalNewsLab-certificate-arn")
+    );
 
     new ApplicationLoadBalancedEc2Service(this, `${id}Service`, {
       cluster,
-      cpu: 128,
-      memoryLimitMiB: 128,
-      desiredCount: 1,
+      cpu: 256,
+      memoryLimitMiB: 256,
+      desiredCount: props.stage === helpers.STAGE.PRODUCTION  ? 3 : 1,
       domainName,
       domainZone,
       certificate,
@@ -83,9 +87,8 @@ export class AppStack extends cdk.Stack {
         taskRole,
         environment: {
           STAGE: props.stage,
-        }
-      }
-    })
-
+        },
+      },
+    });
   }
 }
