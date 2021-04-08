@@ -75,8 +75,8 @@ export class AppStack extends cdk.Stack {
 
     new ApplicationLoadBalancedEc2Service(this, `${id}Service`, {
       cluster,
-      cpu: 1024, // 1 entire vCPU (half the capacity of t3.small)
-      memoryLimitMiB: 1024, // 1 gb memory (half the capcity of t3.small)
+      cpu: 256,
+      memoryLimitMiB: 256,
       desiredCount: 3,
       domainName,
       domainZone,
