@@ -32,7 +32,11 @@ class Model(BaseMapping):
     # Otherwise the statements will be committed at the end.
     @db.atomic()
     def set_current(model_id: int, model_type: Type) -> None:
-        stale_conditions = (Model.type == model_type) & (Model.status == Status.CURRENT.value)
-        update_resources(Model, stale_conditions, status=Status.STALE.value)
+        current_model_query = (Model.type == model_type) & (
+            Model.status == Status.CURRENT.value
+        )
+        update_resources(Model, current_model_query, status=Status.STALE.value)
         update_resources(Model, Model.id == model_id, status=Status.CURRENT.value)
-        logging.info(f"Successfully updated model id {model_id} as current '{model_type}' model")
+        logging.info(
+            f"Successfully updated model id {model_id} as current '{model_type}' model"
+        )
