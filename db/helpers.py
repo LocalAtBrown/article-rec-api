@@ -2,7 +2,7 @@ from datetime import datetime
 
 from peewee import Expression
 
-from db.mappings.base import BaseMapping
+from db.mappings.base import BaseMapping, tzaware_now
 
 
 def create_resource(mapping_class: BaseMapping, **params: dict) -> int:
@@ -16,7 +16,9 @@ def get_resource(mapping_class: BaseMapping, _id: int) -> dict:
     return instance.to_dict()
 
 
-def update_resources(mapping_class: BaseMapping, conditions: Expression, **params: dict) -> None:
-    params["updated_at"] = datetime.now()
+def update_resources(
+    mapping_class: BaseMapping, conditions: Expression, **params: dict
+) -> None:
+    params["updated_at"] = tzaware_now()
     q = mapping_class.update(**params).where(conditions)
     q.execute()
