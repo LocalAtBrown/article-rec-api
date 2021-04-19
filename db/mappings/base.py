@@ -21,7 +21,10 @@ class DateTimeTZField(_DateTimeTZField):
             return datetime.fromisoformat(value).astimezone(timezone.utc)
 
     def python_value(self, value):
-        return value.astimezone(timezone.utc)
+        if isinstance(value, datetime):
+            return value.astimezone(timezone.utc)
+        else:
+            return datetime.fromisoformat(value).astimezone(timezone.utc)
 
 
 class BaseMapping(Model):
