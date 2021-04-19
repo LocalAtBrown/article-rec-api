@@ -1,15 +1,12 @@
 from playhouse.pool import PooledPostgresqlExtDatabase
 
-from lib.config import config, REGION
-from lib.secrets_manager import get_secret
+from lib.config import config
 
-DB_SECRET_ARN = config.get("DB_SECRET_ARN")
-DB_CONFIG = get_secret(DB_SECRET_ARN)
-PASSWORD = DB_CONFIG["password"]
-NAME = DB_CONFIG["dbname"]
-PORT = DB_CONFIG["port"]
-HOST = DB_CONFIG["host"]
-USER = DB_CONFIG["username"]
+PASSWORD = config.get("DB_PASSWORD")
+NAME = config.get("DB_NAME")
+USER = config.get("DB_USER")
+HOST = config.get("DB_HOST")
+PORT = 5432  # default postgres port
 
 db = PooledPostgresqlExtDatabase(
     NAME,
