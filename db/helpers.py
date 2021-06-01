@@ -1,8 +1,10 @@
-from datetime import datetime
+import psycopg2.errors
+import logging
 
 from peewee import Expression
 
 from db.mappings.base import BaseMapping, tzaware_now
+from lib.db import db
 
 
 def create_resource(mapping_class: BaseMapping, **params: dict) -> int:
@@ -22,3 +24,16 @@ def update_resources(
     params["updated_at"] = tzaware_now()
     q = mapping_class.update(**params).where(conditions)
     q.execute()
+
+
+def retry_rollback(f):
+    def decorated(self, *args, **kwargs):
+        with db.transaction() as txn:
+            try:
+                result = f(self, *args, **kwargs)
+            except psycopg2.errors.InFailedSqlTransaction:
+                txn.rollback()
+                logging.info("Rolling back failed transaction.")
+                result = f(self, *args, **kwargs)
+        return result
+    return decorated
