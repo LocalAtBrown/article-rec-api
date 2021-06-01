@@ -1,12 +1,12 @@
 import operator
-from functools import reduce
-
-from peewee import DoesNotExist
 import tornado.web
 
+from functools import reduce
+from peewee import DoesNotExist
+
+from db.helpers import get_resource, retry_rollback
+from db.mappings.model import Model
 from handlers.base import APIHandler, admin_only
-from db.mappings.model import Model, Status
-from db.helpers import get_resource
 
 
 class ModelHandler(APIHandler):
@@ -29,6 +29,7 @@ class ModelHandler(APIHandler):
 
         return query
 
+    @retry_rollback
     async def get(self):
         filters = self.get_arguments()
         query = self.mapping.select()
