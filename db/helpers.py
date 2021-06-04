@@ -1,7 +1,7 @@
 import psycopg2.errors
 import logging
 
-from peewee import Expression
+from peewee import Expression, InterfaceError
 
 from db.mappings.base import BaseMapping, tzaware_now
 from lib.db import db
@@ -28,12 +28,15 @@ def update_resources(
 
 def retry_rollback(f):
     def decorated(self, *args, **kwargs):
-        with db.transaction() as txn:
+        try:
+            result = f(self, *args, **kwargs)
+        except psycopg2.errors.InFailedSqlTransaction:
             try:
-                result = f(self, *args, **kwargs)
-            except psycopg2.errors.InFailedSqlTransaction:
-                txn.rollback()
-                logging.info("Rolling back failed transaction.")
-                result = f(self, *args, **kwargs)
+                with db.transaction() as txn:
+                    txn.rollback()
+                logging.info("Rolled back failed transaction.")
+            except InterfaceError:
+                logging.info("Connection already closed.")
+            result = f(self, *args, **kwargs)
         return result
     return decorated
