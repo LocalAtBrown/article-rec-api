@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from functools import reduce
 from random import randint
 from typing import Dict
+import json
 
 import tornado.web
 
@@ -91,34 +92,22 @@ class RecHandler(APIHandler):
             try:
                 int(filters["source_entity_id"])
             except:
-                error_msgs[
-                    "source_entity_id"
-                ] = f"Invalid input syntax (int): {filters['source_entity_id']}"
+                return f"Invalid input for 'source_entity_id' (int): {filters['source_entity_id']}"
 
         if "exclude" in filters:
             for exclude in filters["exclude"].split(","):
                 try:
                     int(exclude)
                 except:
-                    error_msgs[
-                        "exclude"
-                    ] = f"Invalid input syntax (List[int]): {filters['exclude']}"
+                    return (
+                        f"Invalid input for 'exclude' (List[int]): {filters['exclude']}"
+                    )
 
         if "model_id" in filters:
             try:
                 int(filters["model_id"])
             except:
-                error_msgs[
-                    "model_id"
-                ] = f"Invalid input syntax (int): {filters['model_id']}"
-
-        elif "model_type" in filters:
-            try:
-                str(filters["model_type"])
-            except:
-                error_msgs[
-                    "model_type"
-                ] = f"Invalid input syntax (str): {filters['model_type']}"
+                return f"Invalid input for 'model_id' (int): {filters['model_id']}"
 
         return error_msgs
 
