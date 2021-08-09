@@ -1,3 +1,4 @@
+import random
 import json
 
 import tornado.testing
@@ -41,9 +42,13 @@ class TestRecHandler(BaseTest):
     async def test_get__model_id__filter(self):
         article = ArticleFactory.create()
         first_mdl = ModelFactory.create()
-        RecFactory.create(model_id=first_mdl["id"], recommended_article_id=article["id"])
+        RecFactory.create(
+            model_id=first_mdl["id"], recommended_article_id=article["id"]
+        )
         second_mdl = ModelFactory.create()
-        RecFactory.create(model_id=second_mdl["id"], recommended_article_id=article["id"])
+        RecFactory.create(
+            model_id=second_mdl["id"], recommended_article_id=article["id"]
+        )
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}?model_id={first_mdl['id']}"),
@@ -61,10 +66,14 @@ class TestRecHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_get__model_id__overrides_model_type(self):
         article = ArticleFactory.create()
-        user_mdl = ModelFactory.create(type=Type.USER.value, status=Status.PENDING.value)
+        user_mdl = ModelFactory.create(
+            type=Type.USER.value, status=Status.PENDING.value
+        )
         RecFactory.create(model_id=user_mdl["id"], recommended_article_id=article["id"])
         article_mdl = ModelFactory.create(type=Type.ARTICLE.value)
-        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=article["id"])
+        RecFactory.create(
+            model_id=article_mdl["id"], recommended_article_id=article["id"]
+        )
 
         response = await self.http_client.fetch(
             self.get_url(
@@ -84,10 +93,18 @@ class TestRecHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_get__model_type__pulls_current_model(self):
         article = ArticleFactory.create()
-        pending_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.PENDING.value)
-        RecFactory.create(model_id=pending_mdl["id"], recommended_article_id=article["id"])
-        current_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.CURRENT.value)
-        RecFactory.create(model_id=current_mdl["id"], recommended_article_id=article["id"])
+        pending_mdl = ModelFactory.create(
+            type=Type.ARTICLE.value, status=Status.PENDING.value
+        )
+        RecFactory.create(
+            model_id=pending_mdl["id"], recommended_article_id=article["id"]
+        )
+        current_mdl = ModelFactory.create(
+            type=Type.ARTICLE.value, status=Status.CURRENT.value
+        )
+        RecFactory.create(
+            model_id=current_mdl["id"], recommended_article_id=article["id"]
+        )
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}?model_type={Type.ARTICLE.value}"),
@@ -196,8 +213,12 @@ class TestRecHandler(BaseTest):
         model = ModelFactory.create()
         RecFactory.create(model_id=model["id"], recommended_article_id=excluded_1["id"])
         RecFactory.create(model_id=model["id"], recommended_article_id=excluded_2["id"])
-        RecFactory.create(model_id=model["id"], recommended_article_id=not_excluded["id"])
-        RecFactory.create(model_id=model["id"], recommended_article_id=not_excluded["id"])
+        RecFactory.create(
+            model_id=model["id"], recommended_article_id=not_excluded["id"]
+        )
+        RecFactory.create(
+            model_id=model["id"], recommended_article_id=not_excluded["id"]
+        )
 
         response = await self.http_client.fetch(
             self.get_url(
@@ -216,15 +237,27 @@ class TestRecHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_get__exclude__works_with_model_type(self):
         not_excluded = ArticleFactory.create()
-        user_mdl = ModelFactory.create(type=Type.USER.value, status=Status.CURRENT.value)
-        RecFactory.create(model_id=user_mdl["id"], recommended_article_id=not_excluded["id"])
+        user_mdl = ModelFactory.create(
+            type=Type.USER.value, status=Status.CURRENT.value
+        )
+        RecFactory.create(
+            model_id=user_mdl["id"], recommended_article_id=not_excluded["id"]
+        )
 
         excluded_1 = ArticleFactory.create()
         excluded_2 = ArticleFactory.create()
-        article_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.CURRENT.value)
-        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=excluded_1["id"])
-        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=excluded_2["id"])
-        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=not_excluded["id"])
+        article_mdl = ModelFactory.create(
+            type=Type.ARTICLE.value, status=Status.CURRENT.value
+        )
+        RecFactory.create(
+            model_id=article_mdl["id"], recommended_article_id=excluded_1["id"]
+        )
+        RecFactory.create(
+            model_id=article_mdl["id"], recommended_article_id=excluded_2["id"]
+        )
+        RecFactory.create(
+            model_id=article_mdl["id"], recommended_article_id=not_excluded["id"]
+        )
 
         response = await self.http_client.fetch(
             self.get_url(
@@ -244,18 +277,25 @@ class TestRecHandler(BaseTest):
     @tornado.testing.gen_test
     async def test_get__unseen_source_entity_id__returns_defaults(self):
         article = ArticleFactory.create()
-        article_mdl = ModelFactory.create(type=Type.ARTICLE.value, status=Status.CURRENT.value)
-        RecFactory.create(model_id=article_mdl["id"], recommended_article_id=article["id"])
+        article_mdl = ModelFactory.create(
+            type=Type.ARTICLE.value, status=Status.CURRENT.value
+        )
+        RecFactory.create(
+            model_id=article_mdl["id"], recommended_article_id=article["id"]
+        )
 
         article = ArticleFactory.create()
-        default_mdl = ModelFactory.create(type=Type.POPULARITY.value, status=Status.CURRENT.value)
+        default_mdl = ModelFactory.create(
+            type=Type.POPULARITY.value, status=Status.CURRENT.value
+        )
         default_rec = RecFactory.create(
             model_id=default_mdl["id"], recommended_article_id=article["id"]
         )
 
+        rand_int = random.randint(100, 1000)
         response = await self.http_client.fetch(
             self.get_url(
-                f"{self._endpoint}?source_entity_id=unseen&model_type={Type.ARTICLE.value}"
+                f"{self._endpoint}?source_entity_id={rand_int}&model_type={Type.ARTICLE.value}"
             ),
             method="GET",
             raise_error=False,
