@@ -1,6 +1,6 @@
 name: run unit tests
 on:
-  pushg:
+  push:
     branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
