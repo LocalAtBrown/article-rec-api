@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # allow manual runs from GitHub's Actions tab
 jobs:
   test:
-    runs-on: ghcr.io/catthehacker/ubuntu:act-latest
+    runs-on: ubuntu-latest:ghcr.io/catthehacker/ubuntu:act-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
