@@ -1,0 +1,19 @@
+name: run unit tests
+on:
+  push:
+    branches:
+      - '*'
+jobs:
+  test:
+    runs-on: macos-latest
+    steps: ubuntu-latest
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Install brew
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+      - name: Install dependencies
+        run: brew tap homebrew/bundle && brew bundle
+      - name: Build container
+        run: kar build
+      - name: Run tests
+        run: kar test
