@@ -18,4 +18,4 @@ jobs:
       - name: Build container
         run: kar build
       - name: Run tests
-        run: kar test
+        run: kar run

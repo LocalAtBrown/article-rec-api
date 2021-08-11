@@ -5,4 +5,4 @@ COPY lib/__init__.py lib/__init__.py
 COPY requirements.txt /app
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["python", "/app/app.py"]
+CMD ["py.test", "tests"]
