@@ -11,11 +11,15 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+
       - name: Install brew
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
       - name: Install dependencies
         run: brew tap "aljohri/-" && brew install "AlJohri/-/kar"
+
       - name: Build container
         run: kar build
+
       - name: Run tests
-        run: kar run
+        run: kar test

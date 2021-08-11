@@ -25,12 +25,11 @@ task-build() {
 #@run
 #+Run docker container.
 task-run() {
-    # docker run $DOCKER_OPTS -it $REPOSITORY "$@"
-    docker run $DOCKER_OPTS $REPOSITORY "$@"
+    docker run $DOCKER_OPTS -it $REPOSITORY "$@"
 }
 
 #@test
 #+Run tests.
 task-test() {
-    docker run $DOCKER_OPTS py.test tests
+    docker run $DOCKER_OPTS $REPOSITORY py.test tests
 }
