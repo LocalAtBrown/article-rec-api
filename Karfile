@@ -29,7 +29,7 @@ task-run() {
     docker run $DOCKER_OPTS $REPOSITORY "$@"
 }
 
-#@run
+#@test
 #+Run tests.
 task-test() {
     docker run $DOCKER_OPTS py.test tests
