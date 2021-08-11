@@ -29,9 +29,8 @@ task-run() {
     docker run $DOCKER_OPTS "$@"
 }
 
-#@flask
-#+Run flask development server with automatic reloading.
-task-flask() {
-    # See: https://flask.palletsprojects.com/en/1.1.x/server/#server
-    task-run flask run --host 0.0.0.0 --port $PORT --reload --debugger
+#@run
+#+Run tests.
+task-test() {
+    docker run $DOCKER_OPTS py.test tests
 }
