@@ -355,7 +355,3 @@ class TestRecHandler(BaseTest):
 
         expected_msg = f"Invalid input for 'model_id' (int): {invalid_id}"
         assert results["message"] == expected_msg
-
-    @tornado.testing.gen_test
-    async def test_force_failure(self):
-        assert False
