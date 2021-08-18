@@ -55,7 +55,7 @@ class Config:
                 try:
                     val = self.get_secret(val)
                 except NoCredentialsError:
-                    # github action test workflow does not have aws credentials
+                    # alright if github action test workflow does not have aws credentials
                     logging.warning(
                         f"AWS credentials missing. Can't fetch secret: '{val}'"
                     )

@@ -12,7 +12,7 @@ See [Postman](https://localnewslab.postman.co/workspace/LNL-Workspace~821d679c-4
 kar build
 ```
 
-2. Run the tests
+2. Run the unit tests
 ```
 kar test
 ```
