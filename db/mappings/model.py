@@ -3,9 +3,8 @@ import logging
 
 from peewee import TextField
 
-from db.mappings.base import BaseMapping
+from db.mappings.base import BaseMapping, db_proxy
 from db.helpers import update_resources
-from lib.db import db
 
 
 class Type(enum.Enum):
@@ -30,7 +29,7 @@ class Model(BaseMapping):
 
     # If an exception occurs, the current transaction/savepoint will be rolled back.
     # Otherwise the statements will be committed at the end.
-    @db.atomic()
+    @db_proxy.atomic()
     def set_current(model_id: int, model_type: Type) -> None:
         current_model_query = (Model.type == model_type) & (
             Model.status == Status.CURRENT.value
