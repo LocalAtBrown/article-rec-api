@@ -14,10 +14,6 @@ class TestRecHandler(BaseTest):
     _endpoint = "/recs"
 
     @tornado.testing.gen_test
-    async def test_assert_false(self):
-        assert False
-
-    @tornado.testing.gen_test
     async def test_get__source_entity_id__filter(self):
         model = ModelFactory.create()
         article = ArticleFactory.create()
