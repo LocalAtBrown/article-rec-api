@@ -13,3 +13,5 @@ class Article(BaseMapping):
     title = TextField(null=False, default="")
     path = TextField(null=False, default="")
     published_at = DateTimeField(null=True)
+    site = TextField(null=False)
+

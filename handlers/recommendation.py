@@ -65,10 +65,21 @@ class RecHandler(APIHandler):
                 (self.mapping.source_entity_id == filters["source_entity_id"])
             )
 
+        article_clauses = []
         if "exclude" in filters:
+            article_clauses.append(
+                (Article.external_id.not_in(filters["exclude"].split(",")))
+            )
+        
+        if "site" in filters:
+            article_clauses.append(
+                (Article.site == filters['site'])
+            )
+        
+        if article_clauses:
             query = query.join(
                 Article, on=(Article.id == self.mapping.recommended_article)
-            ).where((Article.external_id.not_in(filters["exclude"].split(","))))
+            ).where(reduce(operator.and_, article_clauses))
 
         if "model_id" in filters:
             clauses.append((self.mapping.model_id == filters["model_id"]))

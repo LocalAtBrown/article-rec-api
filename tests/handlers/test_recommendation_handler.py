@@ -14,6 +14,27 @@ class TestRecHandler(BaseTest):
     _endpoint = "/recs"
 
     @tornado.testing.gen_test
+    async def test_get__site_filter(self):
+        model = ModelFactory.create()
+        article1 = ArticleFactory.create(site="site1")
+        article2 = ArticleFactory.create(site="site2")
+        RecFactory.create(model_id=model["id"], recommended_article_id=article1["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article2["id"])
+
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={'site1'}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+
+        assert len(results["results"]) == 1
+        assert results["results"][0]["recommended_article"]["external_id"] == article1['external_id']
+
+    @tornado.testing.gen_test
     async def test_get__source_entity_id__filter(self):
         model = ModelFactory.create()
         article = ArticleFactory.create()
