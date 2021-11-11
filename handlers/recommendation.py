@@ -25,7 +25,7 @@ class DefaultRecs:
 
     @classmethod
     @retry_rollback
-    def get_recs(cls):
+    def get_recs(cls, **filters):
         if cls.should_refresh():
             query = (
                 Rec.select()
@@ -36,6 +36,11 @@ class DefaultRecs:
                 )
                 .order_by(Rec.score.desc())
             )
+            if "site" in filters:
+                query = query.join(
+                    Article, on=(Article.id == Rec.recommended_article)
+                ).where(Article.site == filters["site"])
+
             cls._recs = [x.to_dict() for x in query]
             cls._last_updated = datetime.now()
 
@@ -142,6 +147,6 @@ class RecHandler(APIHandler):
         query = self.apply_conditions(query, **filters)
         query = self.apply_sort(query, **filters)
         res = {
-            "results": [x.to_dict() for x in query] or DefaultRecs.get_recs(),
+            "results": [x.to_dict() for x in query] or DefaultRecs.get_recs(**filters),
         }
         self.api_response(res)
