@@ -8,10 +8,55 @@ from tests.factories.model import ModelFactory
 from tests.factories.article import ArticleFactory
 from tests.base import BaseTest
 from db.mappings.model import Type, Status
+from lib.config import config
+
+MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 
 
 class TestRecHandler(BaseTest):
     _endpoint = "/recs"
+
+    @tornado.testing.gen_test
+    async def test_get__size__limits_items(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        size = 2
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        assert len(results["results"]) == size
+
+    @tornado.testing.gen_test
+    async def test_get__invalid_size__raises_error(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        invalid_size = MAX_PAGE_SIZE * 2
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?size={invalid_size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 400
+
+        results = json.loads(response.body)
+
+        expected_msg = f"Invalid input for 'size' (int), must be below {MAX_PAGE_SIZE}: {invalid_size}"
+        assert results["message"] == expected_msg
 
     @tornado.testing.gen_test
     async def test_get__site_filter(self):
@@ -32,7 +77,10 @@ class TestRecHandler(BaseTest):
         results = json.loads(response.body)
 
         assert len(results["results"]) == 1
-        assert results["results"][0]["recommended_article"]["external_id"] == article1['external_id']
+        assert (
+            results["results"][0]["recommended_article"]["external_id"]
+            == article1["external_id"]
+        )
 
     @tornado.testing.gen_test
     async def test_get__source_entity_id__filter(self):

@@ -13,6 +13,8 @@ from tornado.httputil import HTTPHeaders
 from lib.metrics import write_metric, Unit
 from lib.config import config
 
+DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
+
 
 def unix_time_ms(datetime_instance):
     return int(
@@ -116,7 +118,9 @@ class APIHandler(BaseHandler):
         super(APIHandler, self).__init__(*args, **kwargs)
 
     def get_arguments(self):
-        return {k: self.get_argument(k) for k in self.request.arguments}
+        arguments = {k: self.get_argument(k) for k in self.request.arguments}
+        arguments["size"] = arguments.get("size", DEFAULT_PAGE_SIZE)
+        return arguments
 
     def apply_sort(self, query, **filters):
         DEFAULT_ORDER_BY = "desc"

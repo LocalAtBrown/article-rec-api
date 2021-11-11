@@ -12,6 +12,9 @@ from db.mappings.recommendation import Rec
 from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
 from handlers.base import APIHandler
+from lib.config import config
+
+MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 
 
 class DefaultRecs:
@@ -70,12 +73,10 @@ class RecHandler(APIHandler):
             article_clauses.append(
                 (Article.external_id.not_in(filters["exclude"].split(",")))
             )
-        
+
         if "site" in filters:
-            article_clauses.append(
-                (Article.site == filters['site'])
-            )
-        
+            article_clauses.append((Article.site == filters["site"]))
+
         if article_clauses:
             query = query.join(
                 Article, on=(Article.id == self.mapping.recommended_article)
@@ -90,6 +91,9 @@ class RecHandler(APIHandler):
                 & (Model.status == Status.CURRENT.value)
             )
 
+        if "size" in filters:
+            query = query.limit(filters["size"])
+
         if len(clauses):
             conditional = reduce(operator.and_, clauses)
             query = query.where(conditional)
@@ -102,14 +106,14 @@ class RecHandler(APIHandler):
         if "source_entity_id" in filters:
             try:
                 int(filters["source_entity_id"])
-            except:
+            except ValueError:
                 return f"Invalid input for 'source_entity_id' (int): {filters['source_entity_id']}"
 
         if "exclude" in filters:
             for exclude in filters["exclude"].split(","):
                 try:
                     int(exclude)
-                except:
+                except ValueError:
                     return (
                         f"Invalid input for 'exclude' (List[int]): {filters['exclude']}"
                     )
@@ -117,8 +121,14 @@ class RecHandler(APIHandler):
         if "model_id" in filters:
             try:
                 int(filters["model_id"])
-            except:
+            except ValueError:
                 return f"Invalid input for 'model_id' (int): {filters['model_id']}"
+
+        if "size" in filters:
+            try:
+                assert int(filters["size"]) < MAX_PAGE_SIZE
+            except (ValueError, AssertionError):
+                return f"Invalid input for 'size' (int), must be below {MAX_PAGE_SIZE}: {filters['size']}"
 
         return error_msgs
 
