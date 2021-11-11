@@ -92,7 +92,7 @@ class RecHandler(APIHandler):
             )
 
         if "size" in filters:
-            query.limit(filters["size"])
+            query = query.limit(filters["size"])
 
         if len(clauses):
             conditional = reduce(operator.and_, clauses)
