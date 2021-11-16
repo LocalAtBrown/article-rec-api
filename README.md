@@ -88,10 +88,42 @@ GET /recs?site=daily-scoop&source_entity_id=10&model_type=article&sort_by=score
 
 #### PARAMS
 **status** (optional)
+
 The status of the model. This can be `current`, `pending`, `stale`, or `failed`.
 
 **type** (optional)
+
 The type of the model. This can be `article` or `popularity`.
+
+**sort_by** (optional)
+
+The field to sort results by. This can be any top-level attribute of a recommendation.
+
+**order_by** (optional)
+
+Either asc for ascending or desc for descending. This value defaults to desc.
+
+#### EXAMPLE REQUEST 
+```
+GET /models?type=article&status=stale&sort_by=created_at
+```
+
+#### EXAMPLE RESPONSE 
+
+```
+{
+    "results": [
+        {
+            "id": 1630,
+            "created_at": "2021-11-15T00:02:51.326462+00:00",
+            "updated_at": "2021-11-16T00:23:54.091209+00:00",
+            "type": "article",
+            "status": "stale"
+        },
+        ...
+    ]
+}
+```
 
 # Development 
 ## Directory Layout
