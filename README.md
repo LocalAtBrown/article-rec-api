@@ -11,6 +11,50 @@ Serves recommended articles for news sites.
 
 ## Endpoints 
 
+### `GET /recs`
+
+#### PARAMS
+**site** (required)
+
+The site to pull recommendations for.
+
+**source_entity_id** (required) 
+
+The article for which you want recommendations, specified by the id from your news site's data store.
+
+**model_type** (optional)
+
+The type of model for which you want recommendations. This should always be `article` in production contexts.
+
+If a model_id is provided, it overrides this input.
+
+**model_id** (optional)
+
+The specific model for which you want recommendations. This is useful in testing environments.
+
+If a model_id is provided, it overrides the model_type.
+
+**exclude** (optional)
+
+A comma-separated list of article id's from your news site's data store to exclude from the results.
+
+**sort_by** (optional)
+
+The field to sort results by. This can be any top-level attribute of a recommendation.
+
+**order_by** (optional)
+
+Either asc for ascending or desc for descending. This value defaults to desc.
+
+### `GET /models`
+
+#### PARAMS
+**status** (optional)
+The status of the model. This can be `current`, `pending`, `stale`, or `failed`.
+
+**type** (optional)
+The type of the model. This can be `article` or `popularity`.
+
 # Development 
 ## Directory Layout
 ```
