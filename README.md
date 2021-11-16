@@ -46,6 +46,44 @@ The field to sort results by. This can be any top-level attribute of a recommend
 
 Either asc for ascending or desc for descending. This value defaults to desc.
 
+#### EXAMPLE REQUEST 
+```
+GET /recs?site=daily-scoop&source_entity_id=10&model_type=article&sort_by=score
+```
+
+#### EXAMPLE RESPONSE
+```
+
+{
+    "results": [
+        {
+            "id": 14208707,
+            "created_at": "2021-11-12T15:55:53.050616+00:00",
+            "updated_at": "2021-11-12T15:55:53.050649+00:00",
+            "source_entity_id": "10",
+            "model": {
+                "id": 1621,
+                "created_at": "2021-11-12T15:55:02.316918+00:00",
+                "updated_at": "2021-11-12T15:56:44.388045+00:00",
+                "type": "article",
+                "status": "current"
+            },
+            "recommended_article": {
+                "id": 62556,
+                "created_at": "2021-11-12T15:36:55.670721+00:00",
+                "updated_at": "2021-11-12T15:36:55.670743+00:00",
+                "external_id": 1,
+                "title": "Who is Montero?",
+                "path": "/article/who-is-montero",
+                "published_at": "2021-04-09T22:00:00+00:00"
+            },
+            "score": "0.861924"
+        },
+        ...
+    ]
+}
+```
+
 ### `GET /models`
 
 #### PARAMS
