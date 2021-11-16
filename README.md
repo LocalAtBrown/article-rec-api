@@ -1,11 +1,17 @@
-## article-rec-api
+# article-rec-api
 
-Surfaces article recommendations populated by the [training job](https://github.com/LocalAtBrown/article-rec-training-job).
+Serves recommended articles for news sites. 
 
-## API Docs
+# API Usage
 
-See [Postman](https://localnewslab.postman.co/workspace/LNL-Workspace~821d679c-4107-43a1-8788-a6685133dbe6/documentation/14469235-73d14eed-bdb9-4d8d-93fb-2b82086142f8).
+## Error Codes
+- 200: OK
+- 400: VALIDATION ERROR
+- 500: INTERNAL SERVER ERROR
 
+## Endpoints 
+
+# Development 
 ## Directory Layout
 ```
 .
