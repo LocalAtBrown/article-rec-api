@@ -1,11 +1,131 @@
-## article-rec-api
+# article-rec-api
 
-Surfaces article recommendations populated by the [training job](https://github.com/LocalAtBrown/article-rec-training-job).
+Serves recommended articles for news sites. 
 
-## API Docs
+# API Usage
 
-See [Postman](https://localnewslab.postman.co/workspace/LNL-Workspace~821d679c-4107-43a1-8788-a6685133dbe6/documentation/14469235-73d14eed-bdb9-4d8d-93fb-2b82086142f8).
+## Error Codes
+- 200: OK
+- 400: VALIDATION ERROR
+- 500: INTERNAL SERVER ERROR
 
+## Endpoints 
+
+### `GET /recs`
+
+#### PARAMS
+**site** (required)
+
+The site to pull recommendations for.
+
+**source_entity_id** (required) 
+
+The article for which you want recommendations, specified by the id from your news site's data store.
+
+**model_type** (optional)
+
+The type of model for which you want recommendations. This should always be `article` in production contexts.
+
+If a model_id is provided, it overrides this input.
+
+**model_id** (optional)
+
+The specific model for which you want recommendations. This is useful in testing environments.
+
+If a model_id is provided, it overrides the model_type.
+
+**exclude** (optional)
+
+A comma-separated list of article id's from your news site's data store to exclude from the results.
+
+**sort_by** (optional)
+
+The field to sort results by. This can be any top-level attribute of a recommendation.
+
+**order_by** (optional)
+
+Either asc for ascending or desc for descending. This value defaults to desc.
+
+#### EXAMPLE REQUEST 
+```
+GET /recs?site=daily-scoop&source_entity_id=10&model_type=article&sort_by=score
+```
+
+#### EXAMPLE RESPONSE
+```
+
+{
+    "results": [
+        {
+            "id": 14208707,
+            "created_at": "2021-11-12T15:55:53.050616+00:00",
+            "updated_at": "2021-11-12T15:55:53.050649+00:00",
+            "source_entity_id": "10",
+            "model": {
+                "id": 1621,
+                "created_at": "2021-11-12T15:55:02.316918+00:00",
+                "updated_at": "2021-11-12T15:56:44.388045+00:00",
+                "type": "article",
+                "status": "current"
+            },
+            "recommended_article": {
+                "id": 62556,
+                "created_at": "2021-11-12T15:36:55.670721+00:00",
+                "updated_at": "2021-11-12T15:36:55.670743+00:00",
+                "external_id": 1,
+                "title": "Who is Montero?",
+                "path": "/article/who-is-montero",
+                "published_at": "2021-04-09T22:00:00+00:00"
+            },
+            "score": "0.861924"
+        },
+        ...
+    ]
+}
+```
+
+### `GET /models`
+
+#### PARAMS
+**status** (optional)
+
+The status of the model. This can be `current`, `pending`, `stale`, or `failed`.
+
+**type** (optional)
+
+The type of the model. This can be `article` or `popularity`.
+
+**sort_by** (optional)
+
+The field to sort results by. This can be any top-level attribute of a recommendation.
+
+**order_by** (optional)
+
+Either asc for ascending or desc for descending. This value defaults to desc.
+
+#### EXAMPLE REQUEST 
+```
+GET /models?type=article&status=stale&sort_by=created_at
+```
+
+#### EXAMPLE RESPONSE 
+
+```
+{
+    "results": [
+        {
+            "id": 1630,
+            "created_at": "2021-11-15T00:02:51.326462+00:00",
+            "updated_at": "2021-11-16T00:23:54.091209+00:00",
+            "type": "article",
+            "status": "stale"
+        },
+        ...
+    ]
+}
+```
+
+# Development 
 ## Directory Layout
 ```
 .
