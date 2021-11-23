@@ -1,5 +1,5 @@
 from tests.factories.base import BaseFactory
-from db.mappings.model import Model, Type, Status
+from db.mappings.model import Model, Type, Status, Site
 
 
 class ModelFactory(BaseFactory):
@@ -10,4 +10,5 @@ class ModelFactory(BaseFactory):
         return {
             "type": Type.ARTICLE.value,
             "status": Status.CURRENT.value,
+            "site": Site.WCP.value,
         }
