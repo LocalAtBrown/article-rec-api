@@ -4,7 +4,7 @@ import tornado.testing
 
 from tests.factories.model import ModelFactory
 from tests.base import BaseTest
-from db.mappings.model import Type, Status, Model
+from db.mappings.model import Type, Status, Site, Model
 from db.helpers import get_resource
 from lib.config import config
 
@@ -85,8 +85,15 @@ class TestModelHandler(BaseTest):
 
     @tornado.testing.gen_test
     async def test_patch__good_admin_token__updates_resource(self):
-        old_current = ModelFactory.create(status=Status.CURRENT.value)
-        new_current = ModelFactory.create(status=Status.STALE.value)
+        old_current = ModelFactory.create(
+            status=Status.CURRENT.value, site=Site.TEXAS_TRIBUNE.value
+        )
+        new_current = ModelFactory.create(
+            status=Status.STALE.value, site=Site.TEXAS_TRIBUNE.value
+        )
+        wrong_site = ModelFactory.create(
+            status=Status.CURRENT.value, site=Site.WCP.value
+        )
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}/{new_current['id']}/set_current"),
@@ -100,5 +107,7 @@ class TestModelHandler(BaseTest):
 
         old_current = get_resource(Model, old_current["id"])
         new_current = get_resource(Model, new_current["id"])
+        wrong_site = get_resource(Model, wrong_site["id"])
         assert old_current["status"] == Status.STALE.value
         assert new_current["status"] == Status.CURRENT.value
+        assert wrong_site["status"] == Status.CURRENT.value

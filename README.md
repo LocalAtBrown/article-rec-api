@@ -1,6 +1,6 @@
 # article-rec-api
 
-Serves recommended articles for news sites. 
+Serves recommended articles for news sites.
 
 # API Usage
 
@@ -9,7 +9,7 @@ Serves recommended articles for news sites.
 - 400: VALIDATION ERROR
 - 500: INTERNAL SERVER ERROR
 
-## Endpoints 
+## Endpoints
 
 ### `GET /recs`
 
@@ -18,7 +18,7 @@ Serves recommended articles for news sites.
 
 The site to pull recommendations for.
 
-**source_entity_id** (required) 
+**source_entity_id** (required)
 
 The article for which you want recommendations, specified by the id from your news site's data store.
 
@@ -46,7 +46,7 @@ The field to sort results by. This can be any top-level attribute of a recommend
 
 Either asc for ascending or desc for descending. This value defaults to desc.
 
-#### EXAMPLE REQUEST 
+#### EXAMPLE REQUEST
 ```
 GET /recs?site=daily-scoop&source_entity_id=10&model_type=article&sort_by=score
 ```
@@ -72,7 +72,7 @@ GET /recs?site=daily-scoop&source_entity_id=10&model_type=article&sort_by=score
                 "id": 62556,
                 "created_at": "2021-11-12T15:36:55.670721+00:00",
                 "updated_at": "2021-11-12T15:36:55.670743+00:00",
-                "external_id": 1,
+                "external_id": "1",
                 "title": "Who is Montero?",
                 "path": "/article/who-is-montero",
                 "published_at": "2021-04-09T22:00:00+00:00"
@@ -103,12 +103,12 @@ The field to sort results by. This can be any top-level attribute of a recommend
 
 Either asc for ascending or desc for descending. This value defaults to desc.
 
-#### EXAMPLE REQUEST 
+#### EXAMPLE REQUEST
 ```
 GET /models?type=article&status=stale&sort_by=created_at
 ```
 
-#### EXAMPLE RESPONSE 
+#### EXAMPLE RESPONSE
 
 ```
 {
@@ -125,7 +125,7 @@ GET /models?type=article&status=stale&sort_by=created_at
 }
 ```
 
-# Development 
+# Development
 ## Directory Layout
 ```
 .
