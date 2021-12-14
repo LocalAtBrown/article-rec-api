@@ -23,6 +23,7 @@ class Application(tornado.web.Application):
             (r"^/recs/?$", recommendation.RecHandler),
             (r"^/models/?$", model.ModelHandler),
             (r"^/models/(\d+)/set_current/?", model.ModelHandler),
+            (r"^/models/(\d+)/articles/?", model.ModelArticleHandler),
         ]
 
         super(Application, self).__init__(app_handlers, **APP_SETTINGS)

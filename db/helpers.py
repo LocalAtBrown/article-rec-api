@@ -1,9 +1,11 @@
-import psycopg2.errors
 import logging
+from typing import List
 
+import psycopg2.errors
 from peewee import Expression, InterfaceError
 
 from db.mappings.base import BaseMapping, tzaware_now
+from db.mappings.article import Article
 from lib.db import db
 
 
@@ -26,6 +28,18 @@ def update_resources(
     q.execute()
 
 
+def get_articles_by_external_ids(site: str, external_ids: List[str]) -> List[dict]:
+    res = (
+        Article.select()
+        .where((Article.site == site) & Article.external_id.in_(list(external_ids)))
+        .order_by(Article.published_at.desc())
+    )
+    if res:
+        return [r.to_dict() for r in res]
+    else:
+        return []
+
+
 def retry_rollback(f):
     def decorated(self, *args, **kwargs):
         try:
@@ -39,4 +53,5 @@ def retry_rollback(f):
                 logging.info("Connection already closed.")
             result = f(self, *args, **kwargs)
         return result
+
     return decorated

@@ -6,7 +6,36 @@ from peewee import DoesNotExist
 
 from db.helpers import get_resource, retry_rollback
 from db.mappings.model import Model
+from db.mappings.recommendation import Rec
+from db.helpers import get_articles_by_external_ids
 from handlers.base import APIHandler, admin_only
+
+
+class ModelArticleHandler(APIHandler):
+    def __init__(self, *args, **kwargs):
+        self.mapping = Model
+        super(APIHandler, self).__init__(*args, **kwargs)
+
+    @retry_rollback
+    async def get(self, _id):
+        model = None
+        try:
+            model = get_resource(self.mapping, _id)
+        except DoesNotExist:
+            raise tornado.web.HTTPError(404, "RESOURCE DOES NOT EXIST")
+
+        rec_query = (
+            Rec.select(Rec.source_entity_id)
+            .join(Model, on=(Model.id == Rec.model))
+            .where((Model.id == model["id"]))
+            .distinct()
+        )
+        source_entity_ids = [rec.source_entity_id for rec in rec_query]
+        articles = get_articles_by_external_ids(model["site"], source_entity_ids)
+        res = {
+            "results": articles,
+        }
+        self.api_response(res)
 
 
 class ModelHandler(APIHandler):
