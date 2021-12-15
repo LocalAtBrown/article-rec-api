@@ -15,6 +15,7 @@ from handlers.base import APIHandler
 from lib.config import config
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
+DEFAULT_SITE = config.get("DEFAULT_SITE")
 
 
 class DefaultRecs:
@@ -141,6 +142,7 @@ class RecHandler(APIHandler):
     @retry_rollback
     async def get(self):
         filters = self.get_arguments()
+        filters["site"] = filters.get("site", DEFAULT_SITE)
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
