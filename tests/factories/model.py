@@ -1,5 +1,8 @@
 from tests.factories.base import BaseFactory
-from db.mappings.model import Model, Type, Status, Site
+from db.mappings.model import Model, Type, Status
+from lib.config import config
+
+DEFAULT_SITE = config.get("DEFAULT_SITE")
 
 
 class ModelFactory(BaseFactory):
@@ -10,5 +13,5 @@ class ModelFactory(BaseFactory):
         return {
             "type": Type.ARTICLE.value,
             "status": Status.CURRENT.value,
-            "site": Site.WCP.value,
+            "site": DEFAULT_SITE,
         }

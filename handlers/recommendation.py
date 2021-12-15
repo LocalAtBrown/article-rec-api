@@ -15,18 +15,19 @@ from handlers.base import APIHandler
 from lib.config import config
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
+DEFAULT_SITE = config.get("DEFAULT_SITE")
 
 
 class DefaultRecs:
     STALE_AFTER_MIN = 5
     DEFAULT_TYPE = Type.POPULARITY.value
-    _recs = None
-    _last_updated = None
+    _recs = {}
+    _last_updated = {}
 
     @classmethod
     @retry_rollback
-    def get_recs(cls):
-        if cls.should_refresh():
+    def get_recs(cls, site):
+        if cls.should_refresh(site):
             query = (
                 Rec.select()
                 .join(Model, on=(Model.id == Rec.model))
@@ -36,21 +37,27 @@ class DefaultRecs:
                 )
                 .order_by(Rec.score.desc())
             )
-            cls._recs = [x.to_dict() for x in query]
-            cls._last_updated = datetime.now()
+            if site:
+                query = query.join(
+                    Article, on=(Article.id == Rec.recommended_article)
+                ).where(Article.site == site)
 
-        return cls._recs
+            cls._recs[site] = [x.to_dict() for x in query]
+            cls._last_updated[site] = datetime.now()
+
+        return cls._recs[site]
 
     @classmethod
-    def should_refresh(cls):
-        if not cls._recs:
+    def should_refresh(cls, site):
+        if not cls._recs.get(site):
             return True
         # add random jitter to prevent multiple unneeded db hits at the same time
         jitter_sec = randint(1, 30)
         stale_threshold = datetime.now() - timedelta(
             minutes=cls.STALE_AFTER_MIN, seconds=jitter_sec
         )
-        if cls._last_updated < stale_threshold:
+        # Note None is always less than stale_threshold
+        if cls._last_updated.get(site) < stale_threshold:
             return True
         return False
 
@@ -135,6 +142,7 @@ class RecHandler(APIHandler):
     @retry_rollback
     async def get(self):
         filters = self.get_arguments()
+        filters["site"] = filters.get("site", DEFAULT_SITE)
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
@@ -142,6 +150,7 @@ class RecHandler(APIHandler):
         query = self.apply_conditions(query, **filters)
         query = self.apply_sort(query, **filters)
         res = {
-            "results": [x.to_dict() for x in query] or DefaultRecs.get_recs(),
+            "results": [x.to_dict() for x in query]
+            or DefaultRecs.get_recs(filters.get("site")),
         }
         self.api_response(res)
