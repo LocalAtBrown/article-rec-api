@@ -383,22 +383,6 @@ class TestRecHandler(BaseTest):
         assert results["results"][0]["model"]["id"] == article_mdl["id"]
 
     @tornado.testing.gen_test
-    async def test_get__invalid_source_entity_id(self):
-        invalid_id = "not_an_int"
-        response = await self.http_client.fetch(
-            self.get_url(f"{self._endpoint}?source_entity_id={invalid_id}"),
-            method="GET",
-            raise_error=False,
-        )
-
-        assert response.code == 400
-
-        results = json.loads(response.body)
-
-        expected_msg = f"Invalid input for 'source_entity_id' (int): {invalid_id}"
-        assert results["message"] == expected_msg
-
-    @tornado.testing.gen_test
     async def test_get__invalid_exclude(self):
         invalid_id = "not_an_int"
         response = await self.http_client.fetch(
