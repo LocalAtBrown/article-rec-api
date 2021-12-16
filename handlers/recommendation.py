@@ -110,12 +110,6 @@ class RecHandler(APIHandler):
     def validate_filters(self, **filters) -> Dict[str, str]:
         error_msgs = {}
 
-        if "source_entity_id" in filters:
-            try:
-                int(filters["source_entity_id"])
-            except ValueError:
-                return f"Invalid input for 'source_entity_id' (int): {filters['source_entity_id']}"
-
         if "exclude" in filters:
             for exclude in filters["exclude"].split(","):
                 try:
