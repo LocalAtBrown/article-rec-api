@@ -4,7 +4,7 @@ import datetime
 import time
 import json
 import logging
-from typing import List
+from typing import List, Dict, Tuple
 from decimal import Decimal
 
 import tornado.web
@@ -14,6 +14,8 @@ from lib.metrics import write_metric, Unit
 from lib.config import config
 
 DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
+# buffer of latency values for each handler/site combination
+LATENCY_BUFFERS: Dict[Tuple[str, str], List[float]] = {}
 
 
 def unix_time_ms(datetime_instance):
@@ -32,16 +34,15 @@ def default_serializer(obj):
 
 
 class LatencyBuffer:
-    _buffer = []
+    def __init__(self):
+        self._buffer = []
 
-    @classmethod
-    def push(cls, latency):
-        cls._buffer.append(latency)
+    def push(self, latency):
+        self._buffer.append(latency)
 
-    @classmethod
-    def flush(cls):
-        _buffer = cls._buffer
-        cls._buffer = []
+    def flush(self):
+        _buffer = self._buffer
+        self._buffer = []
         return _buffer
 
 
@@ -74,8 +75,13 @@ class BaseHandler(tornado.web.RequestHandler):
         self.clear_header("Server")
 
     @property
-    def handler_name(self):
+    def handler_name(self) -> str:
         return self.__class__.__name__.removesuffix("Handler")
+
+    @property
+    def site_name(self) -> str:
+        params = self.get_arguments()
+        return params.get("site", "n/a")
 
     def prepare(self):
         self.start_time = time.time()
@@ -83,17 +89,27 @@ class BaseHandler(tornado.web.RequestHandler):
     def write_error_metric(self, latency: float):
         tags = {
             "handler": self.handler_name,
+            "site": self.site_name,
             "request_method": self.request.method,
             "status_code": self._status_code,
         }
         write_metric("error_request_time", latency, unit=Unit.MILLISECONDS, tags=tags)
 
+    def push_latency(self, latency, handler_name: str, site_name: str) -> None:
+        key = (handler_name, site_name)
+        if LATENCY_BUFFERS.get(key):
+            LATENCY_BUFFERS[key].push(latency)
+        else:
+            LATENCY_BUFFERS[key] = LatencyBuffer()
+            LATENCY_BUFFERS[key].push(latency)
+
     def on_finish(self):
         latency = (time.time() - self.start_time) * 1000
         if not 200 <= self._status_code < 300:
             self.write_error_metric(latency)
-        else:
-            LatencyBuffer.push(latency)
+        # for now, only record latency for /recs endpoint
+        elif self.handler_name == "Rec":
+            self.push_latency(latency, self.handler_name, self.site_name)
 
 
 class NotFoundHandler(BaseHandler):

@@ -33,11 +33,13 @@ async def write_latency_metrics():
     INTERVAL_MIN = 1
     while True:
         await asyncio.sleep(INTERVAL_MIN * 60)
-        latencies = base.LatencyBuffer.flush()
-        if latencies:
-            write_aggregate_metrics(
-                "aggregate_latency", latencies, unit=Unit.MILLISECONDS
-            )
+        for (handler, site), latency_buffer in base.LATENCY_BUFFERS.items():
+            latencies = latency_buffer.flush()
+            if latencies:
+                tags = {"handler": handler, "site": site}
+                write_aggregate_metrics(
+                    "aggregate_latency", latencies, tags=tags, unit=Unit.MILLISECONDS
+                )
 
 
 if __name__ == "__main__":
