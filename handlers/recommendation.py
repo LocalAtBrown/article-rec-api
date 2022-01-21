@@ -16,6 +16,8 @@ from lib.config import config
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
+# counter of default recs served for site
+DEFAULT_REC_COUNTER: Dict[str, int] = {}
 
 
 class DefaultRecs:
@@ -25,8 +27,16 @@ class DefaultRecs:
     _last_updated = {}
 
     @classmethod
+    def incr_counter(cls, site: str) -> None:
+        if DEFAULT_REC_COUNTER.get(site):
+            DEFAULT_REC_COUNTER[site] += 1
+        else:
+            DEFAULT_REC_COUNTER[site] = 1
+
+    @classmethod
     @retry_rollback
     def get_recs(cls, site):
+        cls.incr_counter(site)
         if cls.should_refresh(site):
             query = (
                 Rec.select()
