@@ -75,7 +75,7 @@ def write_aggregate_metrics(
 ) -> None:
     if STAGE == "local":
         logging.info(
-            f"Skipping aggregate metric write for name:{name} | values:{values}"
+            f"Skipping aggregate metric write for name:{name} | values:{values} | tags:{tags}"
         )
         return
     default_tags = {"stage": STAGE}
