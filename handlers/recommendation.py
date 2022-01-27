@@ -2,7 +2,8 @@ import operator
 from datetime import datetime, timedelta
 from functools import reduce
 from random import randint
-from typing import Dict
+from typing import Dict, Any, List
+import logging
 import json
 
 import tornado.web
@@ -35,8 +36,12 @@ class DefaultRecs:
 
     @classmethod
     @retry_rollback
-    def get_recs(cls, site):
+    def get_recs(cls, site: str, external_id: str) -> List[Dict[str, Any]]:
         cls.incr_counter(site)
+        logging.info(
+            f"Returning default recs for site:{site}, external_id:{external_id}"
+        )
+
         if cls.should_refresh(site):
             query = (
                 Rec.select()
@@ -155,6 +160,6 @@ class RecHandler(APIHandler):
         query = self.apply_sort(query, **filters)
         res = {
             "results": [x.to_dict() for x in query]
-            or DefaultRecs.get_recs(filters.get("site")),
+            or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id")),
         }
         self.api_response(res)
