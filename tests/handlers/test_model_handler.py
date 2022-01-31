@@ -118,6 +118,24 @@ class TestModelHandler(BaseTest):
         assert results["results"][0]["type"] == Type.ARTICLE.value
 
     @tornado.testing.gen_test
+    async def test_get__site__filter(self):
+        wcp_mdl = ModelFactory.create(site="washington-city-paper")
+        tt_mdl = ModelFactory.create(site="texas-tribune")
+
+        response = await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site=texas-tribune"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+
+        assert len(results["results"]) == 1
+        assert results["results"][0]["site"] == "texas-tribune"
+
+    @tornado.testing.gen_test
     async def test_patch__no_admin_token__throws_error(self):
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}/1/set_current"),
