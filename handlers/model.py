@@ -52,6 +52,9 @@ class ModelHandler(APIHandler):
         if "type" in filters:
             clauses.append((self.mapping.type == filters["type"]))
 
+        if "site" in filters:
+            clauses.append((self.mapping.site == filters["site"]))
+
         if len(clauses):
             conditional = reduce(operator.and_, clauses)
             query = query.where(conditional)
