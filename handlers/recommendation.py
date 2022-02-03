@@ -2,7 +2,7 @@ import operator
 from datetime import datetime, timedelta
 from functools import reduce
 from random import randint
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 import json
 
@@ -85,18 +85,18 @@ class RecHandler(APIHandler):
     def apply_conditions(self, query, **filters):
         clauses = []
 
-        if "source_entity_id" in filters:
+        if filters.get("source_entity_id"):
             clauses.append(
                 (self.mapping.source_entity_id == filters["source_entity_id"])
             )
 
         article_clauses = []
-        if "exclude" in filters:
+        if filters.get("exclude"):
             article_clauses.append(
                 (Article.external_id.not_in(filters["exclude"].split(",")))
             )
 
-        if "site" in filters:
+        if filters.get("site"):
             article_clauses.append((Article.site == filters["site"]))
 
         if article_clauses:
@@ -104,16 +104,16 @@ class RecHandler(APIHandler):
                 Article, on=(Article.id == self.mapping.recommended_article)
             ).where(reduce(operator.and_, article_clauses))
 
-        if "model_id" in filters:
+        if filters.get("model_id"):
             clauses.append((self.mapping.model_id == filters["model_id"]))
 
-        elif "model_type" in filters:
+        elif filters.get("model_type"):
             query = query.join(Model, on=(Model.id == self.mapping.model)).where(
                 (Model.type == filters["model_type"])
                 & (Model.status == Status.CURRENT.value)
             )
 
-        if "size" in filters:
+        if filters.get("size"):
             query = query.limit(filters["size"])
 
         if len(clauses):
