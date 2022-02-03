@@ -1,6 +1,6 @@
 import operator
 from datetime import datetime, timedelta
-from functools import reduce
+from functools import reduce, lru_cache
 from random import randint
 from typing import Dict, Any, List, Optional
 import logging
@@ -148,7 +148,7 @@ class RecHandler(APIHandler):
 
         return error_msgs
 
-    # TODO add lru cache decorator
+    @lru_cache(maxsize=1024)
     def fetch_cached_results(
         self,
         source_entity_id: Optional[str] = None,
