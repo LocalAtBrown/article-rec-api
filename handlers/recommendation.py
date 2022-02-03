@@ -148,6 +148,38 @@ class RecHandler(APIHandler):
 
         return error_msgs
 
+    # TODO add lru cache decorator
+    def fetch_cached_results(
+        self,
+        source_entity_id: Optional[str] = None,
+        site: Optional[str] = None,
+        model_type: Optional[str] = None,
+        model_id: Optional[str] = None,
+        exclude: Optional[str] = None,
+        size: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        order_by: Optional[str] = None,
+    ):
+        filters = locals()
+        filters.pop("self")
+        query = self.mapping.select()
+        query = self.apply_conditions(query, **filters)
+        query = self.apply_sort(query, **filters)
+        return [x.to_dict() for x in query]
+
+    def fetch_results(self, **filters: Dict[str, str]) -> List[Rec]:
+        results = self.fetch_cached_results(
+            source_entity_id=filters.get("source_entity_id"),
+            site=filters.get("site"),
+            model_type=filters.get("model_type"),
+            model_id=filters.get("model_id"),
+            exclude=filters.get("exclude"),
+            size=filters.get("size"),
+            sort_by=filters.get("sort_by"),
+            order_by=filters.get("order_by"),
+        )
+        return results
+
     @retry_rollback
     async def get(self):
         filters = self.get_arguments()
@@ -155,11 +187,8 @@ class RecHandler(APIHandler):
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
-        query = self.mapping.select()
-        query = self.apply_conditions(query, **filters)
-        query = self.apply_sort(query, **filters)
         res = {
-            "results": [x.to_dict() for x in query]
+            "results": self.fetch_results(**filters)
             or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id")),
         }
         self.api_response(res)
