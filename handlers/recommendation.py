@@ -149,6 +149,7 @@ class RecHandler(APIHandler):
         return error_msgs
 
     # each result takes roughly 50,000 bytes
+    # so 2048 cached results ~= 100 MBs
     @lru_cache(maxsize=2048)
     def fetch_cached_results(
         self,
