@@ -228,7 +228,7 @@ class TestRecHandler(BaseTest):
         assert results["results"][0]["model"]["id"] == current_mdl["id"]
 
     @tornado.testing.gen_test
-    async def test_get__sort_by__defaults_to_desc(self):
+    async def test_get__order_by__defaults_to_desc(self):
         article = ArticleFactory.create()
         model = ModelFactory.create()
         RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
