@@ -1,6 +1,7 @@
 import operator
 from datetime import datetime, timedelta
-from functools import reduce, lru_cache
+from functools import reduce
+from methodtools import lru_cache
 from random import randint
 from typing import Dict, Any, List, Optional
 import logging
