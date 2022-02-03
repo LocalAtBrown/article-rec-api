@@ -140,17 +140,18 @@ class APIHandler(BaseHandler):
 
     def apply_sort(self, query, **filters):
         DEFAULT_ORDER_BY = "desc"
-        if "sort_by" in filters:
+
+        sort_by_field = None
+        if filters.get("sort_by"):
             sort_by_field = getattr(self.mapping, filters["sort_by"], None)
-            if not sort_by_field:
-                return query
-            default_order_rule = getattr(sort_by_field, DEFAULT_ORDER_BY)
-            order_by_rule = getattr(
-                sort_by_field,
-                filters.get("order_by", DEFAULT_ORDER_BY),
-                default_order_rule,
-            )
-            query = query.order_by(order_by_rule())
+        if not sort_by_field:
+            return query
+
+        default_order_rule = getattr(sort_by_field, DEFAULT_ORDER_BY)
+        order_by = filters.get("order_by") or DEFAULT_ORDER_BY
+        order_by_rule = getattr(sort_by_field, order_by, default_order_rule)
+
+        query = query.order_by(order_by_rule())
 
         return query
 
