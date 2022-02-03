@@ -13,7 +13,7 @@ from db.helpers import retry_rollback
 from db.mappings.recommendation import Rec
 from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
-from handlers.base import APIHandler
+from handlers.base import APIHandler, get_ttl_hash
 from lib.config import config
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
@@ -162,6 +162,7 @@ class RecHandler(APIHandler):
         size: Optional[str] = None,
         sort_by: Optional[str] = None,
         order_by: Optional[str] = None,
+        ttl_hash: int = None,
     ):
         filters = locals()
         filters.pop("self")
@@ -180,6 +181,8 @@ class RecHandler(APIHandler):
             size=filters.get("size"),
             sort_by=filters.get("sort_by"),
             order_by=filters.get("order_by"),
+            # expire from cache after a period of seconds
+            ttl_hash=get_ttl_hash(seconds=900),
         )
         return results
 

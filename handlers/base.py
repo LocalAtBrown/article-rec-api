@@ -33,6 +33,11 @@ def default_serializer(obj):
     raise TypeError(f"couldn't serialize obj: {obj}")
 
 
+def get_ttl_hash(seconds: int = 3600) -> int:
+    """Return the same value withing `seconds` time period"""
+    return round(time.time() / seconds)
+
+
 class LatencyBuffer:
     def __init__(self):
         self._buffer = []
