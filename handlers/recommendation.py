@@ -15,30 +15,37 @@ from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
 from handlers.base import APIHandler, get_ttl_hash
 from lib.config import config
+from lib.metrics import write_metric, Unit
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
+# ttl for caching
+STALE_AFTER_MIN = 15
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
+# counter of db hits by site
+DB_HIT_COUNTER: Dict[str, int] = {}
+
+
+def incr_metric_total(counter: Dict[str, int], site: str) -> None:
+    """
+    increment running metric totals to be flushed on an interval
+    """
+    if counter.get(site):
+        counter[site] += 1
+    else:
+        counter[site] = 1
 
 
 class DefaultRecs:
-    STALE_AFTER_MIN = 5
     DEFAULT_TYPE = Type.POPULARITY.value
     _recs = {}
     _last_updated = {}
 
     @classmethod
-    def incr_counter(cls, site: str) -> None:
-        if DEFAULT_REC_COUNTER.get(site):
-            DEFAULT_REC_COUNTER[site] += 1
-        else:
-            DEFAULT_REC_COUNTER[site] = 1
-
-    @classmethod
     @retry_rollback
     def get_recs(cls, site: str, external_id: str) -> List[Dict[str, Any]]:
-        cls.incr_counter(site)
+        incr_metric_total(DEFAULT_REC_COUNTER, site)
         logging.info(
             f"Returning default recs for site:{site}, external_id:{external_id}"
         )
@@ -70,7 +77,7 @@ class DefaultRecs:
         # add random jitter to prevent multiple unneeded db hits at the same time
         jitter_sec = randint(1, 30)
         stale_threshold = datetime.now() - timedelta(
-            minutes=cls.STALE_AFTER_MIN, seconds=jitter_sec
+            minutes=STALE_AFTER_MIN, seconds=jitter_sec
         )
         # Note None is always less than stale_threshold
         if cls._last_updated.get(site) < stale_threshold:
@@ -169,6 +176,7 @@ class RecHandler(APIHandler):
         query = self.mapping.select()
         query = self.apply_conditions(query, **filters)
         query = self.apply_sort(query, **filters)
+        incr_metric_total(DB_HIT_COUNTER, site)
         return [x.to_dict() for x in query]
 
     def fetch_results(self, **filters: Dict[str, str]) -> List[Rec]:
@@ -182,7 +190,7 @@ class RecHandler(APIHandler):
             sort_by=filters.get("sort_by"),
             order_by=filters.get("order_by"),
             # expire from cache after a period of seconds
-            ttl_hash=get_ttl_hash(seconds=900),
+            ttl_hash=get_ttl_hash(seconds=STALE_AFTER_MIN * 60),
         )
         return results
 
