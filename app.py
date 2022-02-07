@@ -40,6 +40,12 @@ async def empty_metric_buffers():
             # reset counter
             recommendation.DEFAULT_REC_COUNTER[site] = 0
 
+        for site, count in recommendation.DB_HIT_COUNTER.items():
+            tags = {"site": site}
+            write_metric("total_rec_queries", count, unit=Unit.COUNT, tags=tags)
+            # reset counter
+            recommendation.DB_HIT_COUNTER[site] = 0
+
         for (handler, site), latency_buffer in base.LATENCY_BUFFERS.items():
             latencies = latency_buffer.flush()
             if latencies:

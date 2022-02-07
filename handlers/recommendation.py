@@ -1,8 +1,9 @@
 import operator
 from datetime import datetime, timedelta
 from functools import reduce
+from methodtools import lru_cache
 from random import randint
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 import json
 
@@ -12,32 +13,39 @@ from db.helpers import retry_rollback
 from db.mappings.recommendation import Rec
 from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
-from handlers.base import APIHandler
+from handlers.base import APIHandler, get_ttl_hash
 from lib.config import config
+from lib.metrics import write_metric, Unit
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
+# ttl for caching
+STALE_AFTER_MIN = 15
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
+# counter of db hits by site
+DB_HIT_COUNTER: Dict[str, int] = {}
+
+
+def incr_metric_total(counter: Dict[str, int], site: str) -> None:
+    """
+    increment running metric totals to be flushed on an interval
+    """
+    if counter.get(site):
+        counter[site] += 1
+    else:
+        counter[site] = 1
 
 
 class DefaultRecs:
-    STALE_AFTER_MIN = 5
     DEFAULT_TYPE = Type.POPULARITY.value
     _recs = {}
     _last_updated = {}
 
     @classmethod
-    def incr_counter(cls, site: str) -> None:
-        if DEFAULT_REC_COUNTER.get(site):
-            DEFAULT_REC_COUNTER[site] += 1
-        else:
-            DEFAULT_REC_COUNTER[site] = 1
-
-    @classmethod
     @retry_rollback
     def get_recs(cls, site: str, external_id: str) -> List[Dict[str, Any]]:
-        cls.incr_counter(site)
+        incr_metric_total(DEFAULT_REC_COUNTER, site)
         logging.info(
             f"Returning default recs for site:{site}, external_id:{external_id}"
         )
@@ -69,7 +77,7 @@ class DefaultRecs:
         # add random jitter to prevent multiple unneeded db hits at the same time
         jitter_sec = randint(1, 30)
         stale_threshold = datetime.now() - timedelta(
-            minutes=cls.STALE_AFTER_MIN, seconds=jitter_sec
+            minutes=STALE_AFTER_MIN, seconds=jitter_sec
         )
         # Note None is always less than stale_threshold
         if cls._last_updated.get(site) < stale_threshold:
@@ -85,18 +93,18 @@ class RecHandler(APIHandler):
     def apply_conditions(self, query, **filters):
         clauses = []
 
-        if "source_entity_id" in filters:
+        if filters.get("source_entity_id"):
             clauses.append(
                 (self.mapping.source_entity_id == filters["source_entity_id"])
             )
 
         article_clauses = []
-        if "exclude" in filters:
+        if filters.get("exclude"):
             article_clauses.append(
                 (Article.external_id.not_in(filters["exclude"].split(",")))
             )
 
-        if "site" in filters:
+        if filters.get("site"):
             article_clauses.append((Article.site == filters["site"]))
 
         if article_clauses:
@@ -104,16 +112,16 @@ class RecHandler(APIHandler):
                 Article, on=(Article.id == self.mapping.recommended_article)
             ).where(reduce(operator.and_, article_clauses))
 
-        if "model_id" in filters:
+        if filters.get("model_id"):
             clauses.append((self.mapping.model_id == filters["model_id"]))
 
-        elif "model_type" in filters:
+        elif filters.get("model_type"):
             query = query.join(Model, on=(Model.id == self.mapping.model)).where(
                 (Model.type == filters["model_type"])
                 & (Model.status == Status.CURRENT.value)
             )
 
-        if "size" in filters:
+        if filters.get("size"):
             query = query.limit(filters["size"])
 
         if len(clauses):
@@ -148,6 +156,44 @@ class RecHandler(APIHandler):
 
         return error_msgs
 
+    # each result takes roughly 50,000 bytes
+    # so 2048 cached results ~= 100 MBs
+    @lru_cache(maxsize=2048)
+    def fetch_cached_results(
+        self,
+        source_entity_id: Optional[str] = None,
+        site: Optional[str] = None,
+        model_type: Optional[str] = None,
+        model_id: Optional[str] = None,
+        exclude: Optional[str] = None,
+        size: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        order_by: Optional[str] = None,
+        ttl_hash: int = None,
+    ):
+        filters = locals()
+        filters.pop("self")
+        query = self.mapping.select()
+        query = self.apply_conditions(query, **filters)
+        query = self.apply_sort(query, **filters)
+        incr_metric_total(DB_HIT_COUNTER, site)
+        return [x.to_dict() for x in query]
+
+    def fetch_results(self, **filters: Dict[str, str]) -> List[Rec]:
+        results = self.fetch_cached_results(
+            source_entity_id=filters.get("source_entity_id"),
+            site=filters.get("site"),
+            model_type=filters.get("model_type"),
+            model_id=filters.get("model_id"),
+            exclude=filters.get("exclude"),
+            size=filters.get("size"),
+            sort_by=filters.get("sort_by"),
+            order_by=filters.get("order_by"),
+            # expire from cache after a period of seconds
+            ttl_hash=get_ttl_hash(seconds=STALE_AFTER_MIN * 60),
+        )
+        return results
+
     @retry_rollback
     async def get(self):
         filters = self.get_arguments()
@@ -155,11 +201,8 @@ class RecHandler(APIHandler):
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
-        query = self.mapping.select()
-        query = self.apply_conditions(query, **filters)
-        query = self.apply_sort(query, **filters)
         res = {
-            "results": [x.to_dict() for x in query]
+            "results": self.fetch_results(**filters)
             or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id")),
         }
         self.api_response(res)
