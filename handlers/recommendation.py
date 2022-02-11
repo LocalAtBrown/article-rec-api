@@ -25,6 +25,8 @@ STALE_AFTER_MIN = 15
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
 # counter of db hits by site
 DB_HIT_COUNTER: Dict[str, int] = {}
+# counter of all handled requests by site
+TOTAL_HANDLED: Dict[str, int] = {}
 
 
 def incr_metric_total(counter: Dict[str, int], site: str) -> None:
@@ -205,4 +207,5 @@ class RecHandler(APIHandler):
             "results": self.fetch_results(**filters)
             or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id")),
         }
+        incr_metric_total(TOTAL_HANDLED, filters["site"])
         self.api_response(res)

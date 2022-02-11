@@ -29,22 +29,30 @@ class Application(tornado.web.Application):
         super(Application, self).__init__(app_handlers, **APP_SETTINGS)
 
 
+def write_counter_metrics(counter: Dict[str, int], metric_name: str) -> None:
+    """
+    each counter includes a total for each site
+    """
+    for site, total in counter.items():
+        tags = {"site": site}
+        write_metric(metric_name, total, unit=Unit.COUNT, tags=tags)
+        # reset counter
+        counter[site] = 0
+
+
 async def empty_metric_buffers():
     INTERVAL_MIN = 1
     while True:
         await asyncio.sleep(INTERVAL_MIN * 60)
 
-        for site, count in recommendation.DEFAULT_REC_COUNTER.items():
-            tags = {"site": site}
-            write_metric("total_default_recs_served", count, unit=Unit.COUNT, tags=tags)
-            # reset counter
-            recommendation.DEFAULT_REC_COUNTER[site] = 0
+        counters = [
+            (recommendation.DEFAULT_REC_COUNTER, "total_default_recs_served"),
+            (recommendation.DB_HIT_COUNTER, "total_rec_db_hits"),
+            (recommendation.TOTAL_HANDLED, "total_rec_requests"),
+        ]
 
-        for site, count in recommendation.DB_HIT_COUNTER.items():
-            tags = {"site": site}
-            write_metric("total_rec_queries", count, unit=Unit.COUNT, tags=tags)
-            # reset counter
-            recommendation.DB_HIT_COUNTER[site] = 0
+        for counter, metric_name in counters:
+            write_counter_metrics(counter, metric_name)
 
         for (handler, site), latency_buffer in base.LATENCY_BUFFERS.items():
             latencies = latency_buffer.flush()
