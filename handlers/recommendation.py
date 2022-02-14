@@ -1,26 +1,27 @@
 import operator
 from datetime import datetime, timedelta
 from functools import reduce
-from methodtools import lru_cache
 from random import randint
 from typing import Dict, Any, List, Optional
 import logging
 import json
 
 import tornado.web
+from cachetools import TTLCache, keys, cached
 
 from db.helpers import retry_rollback
 from db.mappings.recommendation import Rec
 from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
-from handlers.base import APIHandler, get_ttl_hash
+from handlers.base import APIHandler
 from lib.config import config
 from lib.metrics import write_metric, Unit
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
-# ttl for caching
 STALE_AFTER_MIN = 15
+# each result takes roughly 50,000 bytes; 2048 cached results ~= 100 MBs
+TTL_CACHE = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
 # counter of db hits by site
@@ -37,6 +38,12 @@ def incr_metric_total(counter: Dict[str, int], site: str) -> None:
         counter[site] += 1
     else:
         counter[site] = 1
+
+
+def instance_unaware_key(instance, *args, **kwargs):
+    # ignore "self" argument
+    key = keys.hashkey(*args, **kwargs)
+    return key
 
 
 class DefaultRecs:
@@ -158,9 +165,7 @@ class RecHandler(APIHandler):
 
         return error_msgs
 
-    # each result takes roughly 50,000 bytes
-    # so 2048 cached results ~= 100 MBs
-    @lru_cache(maxsize=2048)
+    @cached(cache=TTL_CACHE, key=instance_unaware_key)
     def fetch_cached_results(
         self,
         source_entity_id: Optional[str] = None,
@@ -171,7 +176,6 @@ class RecHandler(APIHandler):
         size: Optional[str] = None,
         sort_by: Optional[str] = None,
         order_by: Optional[str] = None,
-        ttl_hash: int = None,
     ):
         filters = locals()
         filters.pop("self")
@@ -191,8 +195,6 @@ class RecHandler(APIHandler):
             size=filters.get("size"),
             sort_by=filters.get("sort_by"),
             order_by=filters.get("order_by"),
-            # expire from cache after a period of seconds
-            ttl_hash=get_ttl_hash(seconds=STALE_AFTER_MIN * 60),
         )
         return results
 

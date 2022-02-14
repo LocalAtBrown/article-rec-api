@@ -6,4 +6,4 @@ peewee
 psycopg2-binary
 tornado
 pytest
-methodtools
+cachetools

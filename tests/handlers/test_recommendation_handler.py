@@ -1,5 +1,6 @@
 import random
 import json
+from unittest.mock import patch
 
 import tornado.testing
 
@@ -9,12 +10,17 @@ from tests.factories.article import ArticleFactory
 from tests.base import BaseTest
 from db.mappings.model import Type, Status
 from lib.config import config
+from handlers.recommendation import TTL_CACHE
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 
 
 class TestRecHandler(BaseTest):
     _endpoint = "/recs"
+
+    def setUp(self) -> None:
+        TTL_CACHE.clear()
+        super().setUp()
 
     @tornado.testing.gen_test
     async def test_get__size__limits_items(self):
@@ -413,3 +419,57 @@ class TestRecHandler(BaseTest):
 
         expected_msg = f"Invalid input for 'model_id' (int): {invalid_id}"
         assert results["message"] == expected_msg
+
+    @tornado.testing.gen_test
+    async def test_get__duplicate_requests(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        size = 2
+        site = config.get("DEFAULT_SITE")
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert len(TTL_CACHE.keys()) == 1
+
+        # duplicate request
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert len(TTL_CACHE.keys()) == 1
+
+    @tornado.testing.gen_test
+    async def test_get__different_requests(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        size = 2
+        site = config.get("DEFAULT_SITE")
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert len(TTL_CACHE.keys()) == 1
+
+        # different request
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size + 1}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert len(TTL_CACHE.keys()) == 2
