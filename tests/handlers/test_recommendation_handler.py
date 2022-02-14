@@ -18,6 +18,10 @@ MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 class TestRecHandler(BaseTest):
     _endpoint = "/recs"
 
+    def setUp(self) -> None:
+        TTL_CACHE.clear()
+        super().setUp()
+
     @tornado.testing.gen_test
     async def test_get__size__limits_items(self):
         article = ArticleFactory.create()
@@ -442,7 +446,6 @@ class TestRecHandler(BaseTest):
         )
 
         assert len(TTL_CACHE.keys()) == 1
-        TTL_CACHE.clear()
 
     @tornado.testing.gen_test
     async def test_get__different_requests(self):
@@ -470,4 +473,3 @@ class TestRecHandler(BaseTest):
         )
 
         assert len(TTL_CACHE.keys()) == 2
-        TTL_CACHE.clear()
