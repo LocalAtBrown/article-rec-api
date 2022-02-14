@@ -1,5 +1,6 @@
 import random
 import json
+from unittest.mock import patch
 
 import tornado.testing
 
@@ -413,3 +414,35 @@ class TestRecHandler(BaseTest):
 
         expected_msg = f"Invalid input for 'model_id' (int): {invalid_id}"
         assert results["message"] == expected_msg
+
+    @tornado.testing.gen_test
+    @patch("handlers.recommendation.incr_metric_total")
+    async def test_get__duplicate_requests_cached(self, mock_incr_metric_total):
+        article = ArticleFactory.create()
+        model = ModelFactory.create()
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
+
+        size = 2
+        site = config.get("DEFAULT_SITE")
+        # two duplicate requests
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        # one different request
+        await self.http_client.fetch(
+            self.get_url(f"{self._endpoint}?site={site}&size={size + 1}"),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert mock_incr_metric_total.call_count == 2
