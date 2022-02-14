@@ -19,8 +19,8 @@ from lib.metrics import write_metric, Unit
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
-# ttl for caching
 STALE_AFTER_MIN = 15
+TTL_CACHE = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
 # counter of db hits by site
@@ -164,9 +164,7 @@ class RecHandler(APIHandler):
 
     # each result takes roughly 50,000 bytes
     # so 2048 cached results ~= 100 MBs
-    @cached(
-        cache=TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60), key=instance_unaware_key
-    )
+    @cached(cache=TTL_CACHE, key=instance_unaware_key)
     def fetch_cached_results(
         self,
         source_entity_id: Optional[str] = None,
