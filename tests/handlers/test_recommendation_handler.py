@@ -415,8 +415,8 @@ class TestRecHandler(BaseTest):
         expected_msg = f"Invalid input for 'model_id' (int): {invalid_id}"
         assert results["message"] == expected_msg
 
-    @tornado.testing.gen_test
     @patch("handlers.recommendation.incr_metric_total")
+    @tornado.testing.gen_test
     async def test_get__duplicate_requests_cached(self, mock_incr_metric_total):
         article = ArticleFactory.create()
         model = ModelFactory.create()
