@@ -43,7 +43,7 @@ class TestRecHandler(BaseTest):
         assert len(results["results"]) == size
 
     @tornado.testing.gen_test
-    async def test_get__size__limits_default_items(self):
+    async def test_get__size__default_items__size_less_than_res(self):
         article = ArticleFactory.create()
         model = ModelFactory.create(
             type=Type.POPULARITY.value, status=Status.CURRENT.value
@@ -67,6 +67,63 @@ class TestRecHandler(BaseTest):
 
         results = json.loads(response.body)
         assert len(results["results"]) == size
+
+    @tornado.testing.gen_test
+    async def test_get__size__default_items__size_greater_than_res(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create(
+            type=Type.POPULARITY.value, status=Status.CURRENT.value
+        )
+        recs = [
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+        ]
+
+        size = len(recs) + 1
+        site = config.get("DEFAULT_SITE")
+        request_type = Type.ARTICLE.value
+        response = await self.http_client.fetch(
+            self.get_url(
+                f"{self._endpoint}?site={site}&model_type={request_type}&size={size}"
+            ),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        assert len(results["results"]) == len(recs)
+
+    @tornado.testing.gen_test
+    async def test_get__size__default_items__empty_res(self):
+        article = ArticleFactory.create()
+        model = ModelFactory.create(
+            type=Type.POPULARITY.value, status=Status.CURRENT.value
+        )
+
+        size = 2
+        site = config.get("DEFAULT_SITE")
+        request_type = Type.ARTICLE.value
+        response = await self.http_client.fetch(
+            self.get_url(
+                f"{self._endpoint}?site={site}&model_type={request_type}&size={size}"
+            ),
+            method="GET",
+            raise_error=False,
+        )
+
+        assert response.code == 200
+
+        results = json.loads(response.body)
+        assert len(results["results"]) == 0
 
     @tornado.testing.gen_test
     async def test_get__invalid_size__raises_error(self):
