@@ -48,11 +48,18 @@ class TestRecHandler(BaseTest):
         model = ModelFactory.create(
             type=Type.POPULARITY.value, status=Status.CURRENT.value
         )
-        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
-        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
-        RecFactory.create(model_id=model["id"], recommended_article_id=article["id"])
-
-        size = 2
+        recs = [
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+            RecFactory.create(
+                model_id=model["id"], recommended_article_id=article["id"]
+            ),
+        ]
+        size = len(recs) - 1
         site = config.get("DEFAULT_SITE")
         request_type = Type.ARTICLE.value
         response = await self.http_client.fetch(
@@ -62,9 +69,7 @@ class TestRecHandler(BaseTest):
             method="GET",
             raise_error=False,
         )
-
         assert response.code == 200
-
         results = json.loads(response.body)
         assert len(results["results"]) == size
 
@@ -85,7 +90,6 @@ class TestRecHandler(BaseTest):
                 model_id=model["id"], recommended_article_id=article["id"]
             ),
         ]
-
         size = len(recs) + 1
         site = config.get("DEFAULT_SITE")
         request_type = Type.ARTICLE.value
@@ -96,9 +100,7 @@ class TestRecHandler(BaseTest):
             method="GET",
             raise_error=False,
         )
-
         assert response.code == 200
-
         results = json.loads(response.body)
         assert len(results["results"]) == len(recs)
 
