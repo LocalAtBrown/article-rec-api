@@ -78,7 +78,7 @@ class DefaultRecs:
             cls._last_updated[site] = datetime.now()
 
         recs = cls._recs[site]
-        return recs[:size] if len(recs) > size else recs
+        return recs[:size]
 
     @classmethod
     def should_refresh(cls, site):
