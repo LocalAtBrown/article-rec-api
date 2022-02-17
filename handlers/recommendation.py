@@ -53,7 +53,7 @@ class DefaultRecs:
 
     @classmethod
     @retry_rollback
-    def get_recs(cls, site: str, external_id: str) -> List[Dict[str, Any]]:
+    def get_recs(cls, site: str, external_id: str, size: int) -> List[Dict[str, Any]]:
         incr_metric_total(DEFAULT_REC_COUNTER, site)
         logging.info(
             f"Returning default recs for site:{site}, external_id:{external_id}"
@@ -77,7 +77,8 @@ class DefaultRecs:
             cls._recs[site] = [x.to_dict() for x in query]
             cls._last_updated[site] = datetime.now()
 
-        return cls._recs[site]
+        recs = cls._recs[site]
+        return recs[:size]
 
     @classmethod
     def should_refresh(cls, site):
@@ -205,9 +206,12 @@ class RecHandler(APIHandler):
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
+
         res = {
             "results": self.fetch_results(**filters)
-            or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id")),
+            or DefaultRecs.get_recs(
+                filters["site"], filters.get("source_entity_id"), int(filters["size"])
+            ),
         }
         incr_metric_total(TOTAL_HANDLED, filters["site"])
         self.api_response(res)
