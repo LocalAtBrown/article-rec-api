@@ -64,12 +64,15 @@ async def empty_metric_buffers():
                     "aggregate_latency", latencies, tags=tags, unit=Unit.MILLISECONDS
                 )
 
+
 async def restart_db_connection():
     INTERVAL_MIN = 1
     while True:
         await asyncio.sleep(INTERVAL_MIN * 60)
         if db_proxy.is_closed():
+            logging.info("Resetting db conn...")
             db_proxy.connect()
+
 
 if __name__ == "__main__":
     if config.get("DEBUG") is True:
