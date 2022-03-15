@@ -87,4 +87,5 @@ if __name__ == "__main__":
     http_server.listen(port)
     io_loop = tornado.ioloop.IOLoop.current()
     io_loop.add_callback(empty_metric_buffers)
+    io_loop.add_callback(restart_db_connection)
     io_loop.start()
