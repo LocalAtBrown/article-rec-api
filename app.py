@@ -4,6 +4,7 @@ from typing import Dict
 
 import tornado.autoreload
 import tornado.web
+from db.mappings.base import db_proxy
 
 from handlers import recommendation, base, model
 from lib.config import config
@@ -64,6 +65,15 @@ async def empty_metric_buffers():
                 )
 
 
+async def restart_db_connection():
+    INTERVAL_MIN = 1
+    while True:
+        await asyncio.sleep(INTERVAL_MIN * 60)
+        if db_proxy.is_closed():
+            logging.info("Resetting db conn...")
+            db_proxy.connect()
+
+
 if __name__ == "__main__":
     if config.get("DEBUG") is True:
         tornado.autoreload.start()
@@ -80,4 +90,5 @@ if __name__ == "__main__":
     http_server.listen(port)
     io_loop = tornado.ioloop.IOLoop.current()
     io_loop.add_callback(empty_metric_buffers)
+    io_loop.add_callback(restart_db_connection)
     io_loop.start()
