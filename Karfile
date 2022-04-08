@@ -10,10 +10,16 @@ DOCKER_OPTS=$(cat <<END_HEREDOC
 END_HEREDOC
 )
 
-#@cdk
-#+Run cdk.
-task-cdk() {
-    (cd cdk && npx cdk $@)
+#@deploy
+#+CDK deploy.
+task-deploy() {
+    echo "Deploying all dev stacks..."
+    cd cdk
+    for stack in $(npx cdk list | grep Dev)
+    do
+        npx cdk deploy $stack
+    done
+    cd ..
 }
 
 #@build

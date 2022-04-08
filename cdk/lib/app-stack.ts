@@ -77,7 +77,7 @@ export class AppStack extends cdk.Stack {
       cluster,
       cpu: 256,
       memoryLimitMiB: 256,
-      desiredCount: props.stage === helpers.STAGE.PRODUCTION  ? 3 : 1,
+      desiredCount: 3,
       domainName,
       domainZone,
       certificate,
