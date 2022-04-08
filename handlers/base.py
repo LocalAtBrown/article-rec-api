@@ -125,18 +125,12 @@ class HealthHandler(BaseHandler):
     """Return 200 OK."""
 
     def get(self):
-        db_health = self.db_health()
-        if not db_health:
+        is_closed = db_proxy.is_closed()
+        if is_closed:
             msg = "Can't connect to db"
             raise tornado.web.HTTPError(status_code=500, log_message=msg)
 
         self.finish("OK")
-
-    def db_health(self):
-        is_closed = db_proxy.is_closed()
-        if is_closed:
-            return False
-        return True
 
 
 class APIHandler(BaseHandler):
