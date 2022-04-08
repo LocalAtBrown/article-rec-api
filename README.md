@@ -162,7 +162,7 @@ kar test
 For dev deployment, run:
 
 ```
-kar cdk deploy DevArticleRecAPI
+kar deploy
 ```
 
 Each pull request to main will trigger a new prod deployment when merged.
