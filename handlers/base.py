@@ -12,7 +12,8 @@ from tornado.httputil import HTTPHeaders
 
 from lib.metrics import write_metric, Unit
 from lib.config import config
-from db.mappings.base import db_proxy
+from db.mappings.model import Model
+
 
 DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
 # buffer of latency values for each handler/site combination
@@ -105,6 +106,8 @@ class BaseHandler(tornado.web.RequestHandler):
             LATENCY_BUFFERS[key].push(latency)
 
     def on_finish(self):
+        if self.handler_name == "Health":
+            return
         latency = (time.time() - self.start_time) * 1000
         if not 200 <= self._status_code < 300:
             self.write_error_metric(latency)
@@ -125,9 +128,11 @@ class HealthHandler(BaseHandler):
     """Return 200 OK."""
 
     def get(self):
-        is_closed = db_proxy.is_closed()
-        if is_closed:
+        try:
+            Model.select().limit(1).count()
+        except:
             msg = "Can't connect to db"
+            logging.exception(msg)
             raise tornado.web.HTTPError(status_code=500, log_message=msg)
 
         self.finish("OK")
