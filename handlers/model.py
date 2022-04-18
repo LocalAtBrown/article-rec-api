@@ -71,13 +71,3 @@ class ModelHandler(APIHandler):
             "results": [x.to_dict() for x in query],
         }
         self.api_response(res)
-
-    @admin_only
-    async def patch(self, _id):
-        try:
-            resource = get_resource(self.mapping, _id)
-        except DoesNotExist:
-            raise tornado.web.HTTPError(404, "RESOURCE DOES NOT EXIST")
-        self.mapping.set_current(_id, resource["type"], resource["site"])
-        resource = get_resource(self.mapping, _id)
-        self.api_response(resource)
