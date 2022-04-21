@@ -136,6 +136,12 @@ GET /models?type=article&status=stale&sort_by=created_at
 └── tests     # unit tests
 ```
 
+## Environment
+
+Environment parameters are defined in `env.json`.
+
+You can add a new secret parameter [using AWS SSM](https://www.notion.so/Working-with-SSM-Parameters-82df52fd71b24762b541cc8439f40e4e).
+
 ## Local Usage
 1. Build the container
 ```
