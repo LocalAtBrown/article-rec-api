@@ -5,6 +5,7 @@ description = "Code for the Local News Lab article recommendation API"
 authors = ["LocalNewsLab <mh3287@columbia.edu>"]
 
 [tool.poetry.dependencies]
+# if this python version changes, the python base image in the Dockerfile needs to change too
 python = "3.9.*"
 boto3 = "1.16.5"
 cachetools = "5.0.0"
