@@ -1,19 +1,15 @@
-import re
-import cgi
 import datetime
-import time
 import json
 import logging
-from typing import List, Dict, Tuple
+import time
 from decimal import Decimal
+from typing import Dict, List, Tuple
 
 import tornado.web
-from tornado.httputil import HTTPHeaders
 
-from lib.metrics import write_metric, Unit
-from lib.config import config
 from db.mappings.model import Model
-
+from lib.config import config
+from lib.metrics import Unit, write_metric
 
 DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
 # buffer of latency values for each handler/site combination
@@ -21,10 +17,7 @@ LATENCY_BUFFERS: Dict[Tuple[str, str], List[float]] = {}
 
 
 def unix_time_ms(datetime_instance):
-    return int(
-        time.mktime(datetime_instance.timetuple()) * 1e3
-        + datetime_instance.microsecond / 1e3
-    )
+    return int(time.mktime(datetime_instance.timetuple()) * 1e3 + datetime_instance.microsecond / 1e3)
 
 
 def default_serializer(obj):
@@ -130,7 +123,7 @@ class HealthHandler(BaseHandler):
     def get(self):
         try:
             Model.select().limit(1).count()
-        except:
+        except Exception:
             msg = "Can't connect to db"
             logging.exception(msg)
             raise tornado.web.HTTPError(status_code=500, log_message=msg)

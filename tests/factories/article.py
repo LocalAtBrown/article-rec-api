@@ -1,8 +1,8 @@
 from random import randint
 
-from tests.factories.base import BaseFactory
 from db.mappings.article import Article
 from lib.config import config
+from tests.factories.base import BaseFactory
 
 DEFAULT_SITE = config.get("DEFAULT_SITE")
 

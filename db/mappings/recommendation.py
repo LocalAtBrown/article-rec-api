@@ -1,8 +1,8 @@
-from peewee import TextField, DecimalField, ForeignKeyField
+from peewee import DecimalField, ForeignKeyField, TextField
 
+from db.mappings.article import Article
 from db.mappings.base import BaseMapping
 from db.mappings.model import Model
-from db.mappings.article import Article
 
 
 class Rec(BaseMapping):

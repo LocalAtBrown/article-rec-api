@@ -3,8 +3,8 @@ import logging
 
 from peewee import TextField
 
-from db.mappings.base import BaseMapping, db_proxy
 from db.helpers import update_resources
+from db.mappings.base import BaseMapping, db_proxy
 
 
 class Type(enum.Enum):
@@ -39,12 +39,8 @@ class Model(BaseMapping):
     @db_proxy.atomic()
     def set_current(model_id: int, model_type: Type, model_site: Site) -> None:
         current_model_query = (
-            (Model.type == model_type)
-            & (Model.status == Status.CURRENT.value)
-            & (Model.site == model_site)
+            (Model.type == model_type) & (Model.status == Status.CURRENT.value) & (Model.site == model_site)
         )
         update_resources(Model, current_model_query, status=Status.STALE.value)
         update_resources(Model, Model.id == model_id, status=Status.CURRENT.value)
-        logging.info(
-            f"Successfully updated model id {model_id} as current '{model_type}' model for '{model_site}'"
-        )
+        logging.info(f"Successfully updated model id {model_id} as current '{model_type}' model for '{model_site}'")

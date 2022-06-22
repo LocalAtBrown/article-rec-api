@@ -1,15 +1,13 @@
-import logging
 import asyncio
+import logging
 from typing import Dict
 
 import tornado.autoreload
 import tornado.web
-from db.mappings.base import db_proxy
 
-from handlers import recommendation, base, model
+from handlers import base, model, recommendation
 from lib.config import config
-from lib.metrics import write_metric, write_aggregate_metrics, Unit
-
+from lib.metrics import Unit, write_aggregate_metrics, write_metric
 
 APP_SETTINGS = {
     "default_handler_class": base.NotFoundHandler,
@@ -60,9 +58,7 @@ async def empty_metric_buffers():
             latencies = latency_buffer.flush()
             if latencies:
                 tags = {"handler": handler, "site": site}
-                write_aggregate_metrics(
-                    "aggregate_latency", latencies, tags=tags, unit=Unit.MILLISECONDS
-                )
+                write_aggregate_metrics("aggregate_latency", latencies, tags=tags, unit=Unit.MILLISECONDS)
 
 
 if __name__ == "__main__":
@@ -75,9 +71,7 @@ if __name__ == "__main__":
     port = config.get("PORT")
     logging.info(f"service is listening on port {port}")
 
-    http_server = tornado.httpserver.HTTPServer(
-        request_callback=Application(), xheaders=True
-    )
+    http_server = tornado.httpserver.HTTPServer(request_callback=Application(), xheaders=True)
     http_server.listen(port)
     io_loop = tornado.ioloop.IOLoop.current()
     io_loop.add_callback(empty_metric_buffers)

@@ -1,4 +1,3 @@
-from copy import deepcopy
 from db.helpers import create_resource, get_resource
 
 

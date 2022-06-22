@@ -2,13 +2,11 @@ import json
 
 import tornado.testing
 
-from tests.factories.model import ModelFactory
-from tests.factories.article import ArticleFactory
-from tests.factories.recommendation import RecFactory
+from db.mappings.model import Site, Status, Type
 from tests.base import BaseTest
-from db.mappings.model import Type, Status, Site, Model
-from db.helpers import get_resource
-from lib.config import config
+from tests.factories.article import ArticleFactory
+from tests.factories.model import ModelFactory
+from tests.factories.recommendation import RecFactory
 
 
 class TestModelArticleHandler(BaseTest):
@@ -26,12 +24,8 @@ class TestModelArticleHandler(BaseTest):
 
     @tornado.testing.gen_test
     async def test_get(self):
-        misc_model = ModelFactory.create(
-            status=Status.CURRENT.value, site=Site.TEXAS_TRIBUNE.value
-        )
-        target_model = ModelFactory.create(
-            status=Status.STALE.value, site=Site.TEXAS_TRIBUNE.value
-        )
+        misc_model = ModelFactory.create(status=Status.CURRENT.value, site=Site.TEXAS_TRIBUNE.value)
+        target_model = ModelFactory.create(status=Status.STALE.value, site=Site.TEXAS_TRIBUNE.value)
 
         misc_article = ArticleFactory.create(site=Site.TEXAS_TRIBUNE.value)
         target_article_1 = ArticleFactory.create(site=Site.TEXAS_TRIBUNE.value)
@@ -83,8 +77,8 @@ class TestModelHandler(BaseTest):
 
     @tornado.testing.gen_test
     async def test_get__status__filter(self):
-        current_mdl = ModelFactory.create(status=Status.CURRENT.value)
-        pending_mdl = ModelFactory.create(status=Status.PENDING.value)
+        ModelFactory.create(status=Status.CURRENT.value)
+        ModelFactory.create(status=Status.PENDING.value)
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}?status={Status.CURRENT.value}"),
@@ -101,8 +95,8 @@ class TestModelHandler(BaseTest):
 
     @tornado.testing.gen_test
     async def test_get__type__filter(self):
-        article_mdl = ModelFactory.create(type=Type.ARTICLE.value)
-        user_mdl = ModelFactory.create(type=Type.USER.value)
+        ModelFactory.create(type=Type.ARTICLE.value)
+        ModelFactory.create(type=Type.USER.value)
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}?type={Type.ARTICLE.value}"),
@@ -119,8 +113,8 @@ class TestModelHandler(BaseTest):
 
     @tornado.testing.gen_test
     async def test_get__site__filter(self):
-        wcp_mdl = ModelFactory.create(site="washington-city-paper")
-        tt_mdl = ModelFactory.create(site="texas-tribune")
+        ModelFactory.create(site="washington-city-paper")
+        ModelFactory.create(site="texas-tribune")
 
         response = await self.http_client.fetch(
             self.get_url(f"{self._endpoint}?site=texas-tribune"),
