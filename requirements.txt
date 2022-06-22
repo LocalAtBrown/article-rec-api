@@ -4,8 +4,6 @@
 #
 #    pip-compile
 #
--e file:.#egg=lib
-    # via -r requirements.in
 attrs==20.3.0
     # via pytest
 boto3==1.16.5
