@@ -142,6 +142,21 @@ Environment parameters are defined in `env.json`.
 
 You can add a new secret parameter [using AWS SSM](https://www.notion.so/Working-with-SSM-Parameters-82df52fd71b24762b541cc8439f40e4e).
 
+## Development Tools
+
+We use [Poetry](https://python-poetry.org/) to manage dependencies. It also helps with pinning dependency and python
+versions.
+
+### Setup
+
+1. [Install Poetry](https://python-poetry.org/docs/#installation).
+2. Run `poetry install --no-root`
+
+### Update Dependencies
+
+To update dependencies in your local environment, make changes to the `pyproject.toml` file then run `poetry update`.
+To update `requirements.txt` for the container, run `poetry export -o requirements.txt --without-hashes`.
+
 ## Local Usage
 1. Build the container
 ```

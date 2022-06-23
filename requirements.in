@@ -1,9 +1,0 @@
--e file:.#egg=lib
-boto3
-Flask
-uwsgi
-peewee
-psycopg2-binary
-tornado
-pytest
-cachetools
