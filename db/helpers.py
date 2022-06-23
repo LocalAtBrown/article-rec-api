@@ -4,11 +4,10 @@ from typing import List
 import psycopg2.errors
 from peewee import Expression, InterfaceError
 
-from db.mappings.base import BaseMapping, tzaware_now
 from db.mappings.article import Article
-from lib.db import db
+from db.mappings.base import BaseMapping, tzaware_now
 from lib.config import config
-
+from lib.db import db
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 
@@ -24,9 +23,7 @@ def get_resource(mapping_class: BaseMapping, _id: int) -> dict:
     return instance.to_dict()
 
 
-def update_resources(
-    mapping_class: BaseMapping, conditions: Expression, **params: dict
-) -> None:
+def update_resources(mapping_class: BaseMapping, conditions: Expression, **params: dict) -> None:
     params["updated_at"] = tzaware_now()
     q = mapping_class.update(**params).where(conditions)
     q.execute()

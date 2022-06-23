@@ -1,6 +1,6 @@
-from tests.factories.base import BaseFactory
-from db.mappings.model import Model, Type, Status
+from db.mappings.model import Model, Status, Type
 from lib.config import config
+from tests.factories.base import BaseFactory
 
 DEFAULT_SITE = config.get("DEFAULT_SITE")
 

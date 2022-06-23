@@ -1,15 +1,12 @@
-import functools
-
 import tornado.testing
-from tornado.concurrent import Future
 from peewee import SqliteDatabase
+from tornado.concurrent import Future
 
 from app import Application
 from db.mappings import database
-from db.mappings.model import Model
 from db.mappings.article import Article
+from db.mappings.model import Model
 from db.mappings.recommendation import Rec
-
 
 MAPPINGS = (Model, Article, Rec)
 

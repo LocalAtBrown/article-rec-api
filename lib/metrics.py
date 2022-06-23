@@ -1,9 +1,9 @@
-from typing import Dict, List
 import logging
+from typing import Dict, List
 
 import boto3
 
-from lib.config import config, STAGE, REGION
+from lib.config import REGION, STAGE, config
 
 client = boto3.client("cloudwatch", REGION)
 SERVICE = config.get("SERVICE")
@@ -45,9 +45,7 @@ def write_metric(
     tags: Dict[str, str] = None,
 ) -> None:
     if STAGE == "local":
-        logging.info(
-            f"Skipping metric write for name:{name} | value:{value} | tags:{tags}"
-        )
+        logging.info(f"Skipping metric write for name:{name} | value:{value} | tags:{tags}")
         return
     default_tags = {"stage": STAGE}
     if tags:
@@ -74,9 +72,7 @@ def write_aggregate_metrics(
     tags: Dict[str, str] = None,
 ) -> None:
     if STAGE == "local":
-        logging.info(
-            f"Skipping aggregate metric write for name:{name} | values:{values} | tags:{tags}"
-        )
+        logging.info(f"Skipping aggregate metric write for name:{name} | values:{values} | tags:{tags}")
         return
     default_tags = {"stage": STAGE}
     if tags:

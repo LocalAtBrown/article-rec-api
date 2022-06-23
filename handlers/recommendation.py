@@ -1,21 +1,19 @@
+import logging
 import operator
 from datetime import datetime, timedelta
 from functools import reduce
 from random import randint
-from typing import Dict, Any, List, Optional
-import logging
-import json
+from typing import Any, Dict, List, Optional
 
 import tornado.web
-from cachetools import TTLCache, keys, cached
+from cachetools import TTLCache, cached, keys
 
 from db.helpers import retry_rollback
-from db.mappings.recommendation import Rec
-from db.mappings.model import Model, Status, Type
 from db.mappings.article import Article
+from db.mappings.model import Model, Status, Type
+from db.mappings.recommendation import Rec
 from handlers.base import APIHandler
 from lib.config import config
-from lib.metrics import write_metric, Unit
 
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
@@ -55,24 +53,17 @@ class DefaultRecs:
     @retry_rollback
     def get_recs(cls, site: str, external_id: str, size: int) -> List[Dict[str, Any]]:
         incr_metric_total(DEFAULT_REC_COUNTER, site)
-        logging.info(
-            f"Returning default recs for site:{site}, external_id:{external_id}"
-        )
+        logging.info(f"Returning default recs for site:{site}, external_id:{external_id}")
 
         if cls.should_refresh(site):
             query = (
                 Rec.select()
                 .join(Model, on=(Model.id == Rec.model))
-                .where(
-                    (Model.type == cls.DEFAULT_TYPE)
-                    & (Model.status == Status.CURRENT.value)
-                )
+                .where((Model.type == cls.DEFAULT_TYPE) & (Model.status == Status.CURRENT.value))
                 .order_by(Rec.score.desc())
             )
             if site:
-                query = query.join(
-                    Article, on=(Article.id == Rec.recommended_article)
-                ).where(Article.site == site)
+                query = query.join(Article, on=(Article.id == Rec.recommended_article)).where(Article.site == site)
 
             cls._recs[site] = [x.to_dict() for x in query]
             cls._last_updated[site] = datetime.now()
@@ -86,9 +77,7 @@ class DefaultRecs:
             return True
         # add random jitter to prevent multiple unneeded db hits at the same time
         jitter_sec = randint(1, 30)
-        stale_threshold = datetime.now() - timedelta(
-            minutes=STALE_AFTER_MIN, seconds=jitter_sec
-        )
+        stale_threshold = datetime.now() - timedelta(minutes=STALE_AFTER_MIN, seconds=jitter_sec)
         # Note None is always less than stale_threshold
         if cls._last_updated.get(site) < stale_threshold:
             return True
@@ -104,31 +93,26 @@ class RecHandler(APIHandler):
         clauses = []
 
         if filters.get("source_entity_id"):
-            clauses.append(
-                (self.mapping.source_entity_id == filters["source_entity_id"])
-            )
+            clauses.append((self.mapping.source_entity_id == filters["source_entity_id"]))
 
         article_clauses = []
         if filters.get("exclude"):
-            article_clauses.append(
-                (Article.external_id.not_in(filters["exclude"].split(",")))
-            )
+            article_clauses.append((Article.external_id.not_in(filters["exclude"].split(","))))
 
         if filters.get("site"):
             article_clauses.append((Article.site == filters["site"]))
 
         if article_clauses:
-            query = query.join(
-                Article, on=(Article.id == self.mapping.recommended_article)
-            ).where(reduce(operator.and_, article_clauses))
+            query = query.join(Article, on=(Article.id == self.mapping.recommended_article)).where(
+                reduce(operator.and_, article_clauses)
+            )
 
         if filters.get("model_id"):
             clauses.append((self.mapping.model_id == filters["model_id"]))
 
         elif filters.get("model_type"):
             query = query.join(Model, on=(Model.id == self.mapping.model)).where(
-                (Model.type == filters["model_type"])
-                & (Model.status == Status.CURRENT.value)
+                (Model.type == filters["model_type"]) & (Model.status == Status.CURRENT.value)
             )
 
         if filters.get("size"):
@@ -148,9 +132,7 @@ class RecHandler(APIHandler):
                 try:
                     int(exclude)
                 except ValueError:
-                    return (
-                        f"Invalid input for 'exclude' (List[int]): {filters['exclude']}"
-                    )
+                    return f"Invalid input for 'exclude' (List[int]): {filters['exclude']}"
 
         if "model_id" in filters:
             try:
@@ -209,9 +191,7 @@ class RecHandler(APIHandler):
 
         res = {
             "results": self.fetch_results(**filters)
-            or DefaultRecs.get_recs(
-                filters["site"], filters.get("source_entity_id"), int(filters["size"])
-            ),
+            or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id"), int(filters["size"])),
         }
         incr_metric_total(TOTAL_HANDLED, filters["site"])
         self.api_response(res)

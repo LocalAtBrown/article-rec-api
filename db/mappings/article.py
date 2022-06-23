@@ -1,6 +1,4 @@
-import datetime
-
-from peewee import TextField, DateTimeField, IntegerField
+from peewee import DateTimeField, TextField
 
 from db.mappings.base import BaseMapping
 

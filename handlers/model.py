@@ -1,14 +1,13 @@
 import operator
-import tornado.web
-
 from functools import reduce
+
+import tornado.web
 from peewee import DoesNotExist
 
-from db.helpers import get_resource, retry_rollback
+from db.helpers import get_articles_by_external_ids, get_resource, retry_rollback
 from db.mappings.model import Model
 from db.mappings.recommendation import Rec
-from db.helpers import get_articles_by_external_ids
-from handlers.base import APIHandler, admin_only
+from handlers.base import APIHandler
 
 
 class ModelArticleHandler(APIHandler):

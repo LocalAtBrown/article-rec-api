@@ -126,6 +126,7 @@ GET /models?type=article&status=stale&sort_by=created_at
 ```
 
 # Development
+
 ## Directory Layout
 ```
 .
@@ -144,13 +145,30 @@ You can add a new secret parameter [using AWS SSM](https://www.notion.so/Working
 
 ## Development Tools
 
+1. Set up a [virtual environment](https://docs.python.org/3/library/venv.html) (or let your IDE do it for you).
 We use [Poetry](https://python-poetry.org/) to manage dependencies. It also helps with pinning dependency and python
-versions.
+2. Run `pip install -r requirements.txt`
+versions. We also use [pre-commit](https://pre-commit.com/) with hooks for [isort](https://pycqa.github.io/isort/),
+3. Run `pip install pre-commit`
+[black](https://github.com/psf/black), and [flake8](https://flake8.pycqa.org/en/latest/) for consistent code style and
+readability. Note that this means code that doesn't meet the rules will fail to commit until it is fixed.
 
 ### Setup
 
 1. [Install Poetry](https://python-poetry.org/docs/#installation).
 2. Run `poetry install --no-root`
+3. Make sure the virtual environment is active, then
+4. Run `pre-commit install`
+5. To test it out, run `pre-commit run --all-files`
+
+You're all set up! Your local environment should include all dependencies, including dev dependencies like `black`.
+This is done with Poetry via the `poetry.lock` file. As for the containerized code, that still pulls dependencies from
+`requirements.txt`. Any containerized dependency requirements need to be updated in `pyproject.toml` then exported to
+`requirements.txt`.
+
+### Run Code Format and Linting
+
+To manually run isort, black, and flake8 all in one go, simply run `pre-commit run --all-files`.
 
 ### Update Dependencies
 

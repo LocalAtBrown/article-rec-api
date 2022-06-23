@@ -1,7 +1,7 @@
 from random import randint, random
 
-from tests.factories.base import BaseFactory
 from db.mappings.recommendation import Rec
+from tests.factories.base import BaseFactory
 
 
 class RecFactory(BaseFactory):
