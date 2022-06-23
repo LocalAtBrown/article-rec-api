@@ -159,7 +159,6 @@ readability. Note that this means code that doesn't meet the rules will fail to 
 2. Run `poetry install --no-root`
 3. Make sure the virtual environment is active, then
 4. Run `pre-commit install`
-4. Run `pre-commit install`
 5. To test it out, run `pre-commit run --all-files`
 
 You're all set up! Your local environment should include all dependencies, including dev dependencies like `black`.
