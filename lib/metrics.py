@@ -42,7 +42,7 @@ def write_metric(
     name: str,
     value: float,
     unit: str = Unit.COUNT,
-    tags: Dict[str, str] = None,
+    tags: dict = None,
 ) -> None:
     if STAGE == "local":
         logging.info(f"Skipping metric write for name:{name} | value:{value} | tags:{tags}")
