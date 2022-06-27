@@ -19,7 +19,7 @@ MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
 STALE_AFTER_MIN = 15
 # each result takes roughly 50,000 bytes; 2048 cached results ~= 100 MBs
-TTL_CACHE = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
+TTL_CACHE: TTLCache = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
 # counter of db hits by site
@@ -46,8 +46,8 @@ def instance_unaware_key(instance, *args, **kwargs):
 
 class DefaultRecs:
     DEFAULT_TYPE = Type.POPULARITY.value
-    _recs = {}
-    _last_updated = {}
+    _recs: dict[str, list[dict]] = {}
+    _last_updated: dict[str, datetime] = {}
 
     @classmethod
     @retry_rollback
