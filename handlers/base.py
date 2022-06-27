@@ -3,7 +3,6 @@ import json
 import logging
 import time
 from decimal import Decimal
-from typing import Dict, List, Tuple
 
 import tornado.web
 
@@ -12,8 +11,6 @@ from lib.config import config
 from lib.metrics import Unit, write_metric
 
 DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
-# buffer of latency values for each handler/site combination
-LATENCY_BUFFERS: Dict[Tuple[str, str], List[float]] = {}
 
 
 def unix_time_ms(datetime_instance):
@@ -39,6 +36,10 @@ class LatencyBuffer:
         _buffer = self._buffer
         self._buffer = []
         return _buffer
+
+
+# buffer of latency values for each handler/site combination
+LATENCY_BUFFERS: dict[tuple[str, str], LatencyBuffer] = {}
 
 
 def admin_only(f):
