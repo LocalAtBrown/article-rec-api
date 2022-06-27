@@ -75,8 +75,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     @property
     def site_name(self) -> str:
-        params = self.get_arguments()
-        return params.get("site", "n/a")
+        return self.get_argument("site", "n/a")
 
     def prepare(self):
         self.start_time = time.time()
