@@ -29,11 +29,10 @@ class Config:
         return val
 
     def is_secret(self, val: str) -> bool:
-        if not isinstance(val, str):
+        try:
+            return val.startswith("/prod") or val.startswith("/dev")
+        except AttributeError:
             return False
-
-        if val.startswith("/prod") or val.startswith("/dev"):
-            return True
 
     def get(self, var_name: str) -> Any:
         try:
