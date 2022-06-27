@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import time
+from collections import defaultdict
 from decimal import Decimal
 
 import tornado.web
@@ -39,7 +40,7 @@ class LatencyBuffer:
 
 
 # buffer of latency values for each handler/site combination
-LATENCY_BUFFERS: dict[tuple[str, str], LatencyBuffer] = {}
+LATENCY_BUFFERS: dict[tuple[str, str], LatencyBuffer] = defaultdict(LatencyBuffer)
 
 
 def admin_only(f):
@@ -92,11 +93,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def push_latency(self, latency, handler_name: str, site_name: str) -> None:
         key = (handler_name, site_name)
-        if LATENCY_BUFFERS.get(key):
-            LATENCY_BUFFERS[key].push(latency)
-        else:
-            LATENCY_BUFFERS[key] = LatencyBuffer()
-            LATENCY_BUFFERS[key].push(latency)
+        LATENCY_BUFFERS[key].push(latency)
 
     def on_finish(self):
         if self.handler_name == "Health":
