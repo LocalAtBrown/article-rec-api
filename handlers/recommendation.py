@@ -28,7 +28,7 @@ DB_HIT_COUNTER: Dict[str, int] = {}
 TOTAL_HANDLED: Dict[str, int] = {}
 
 
-def incr_metric_total(counter: Dict[str, int], site: str) -> None:
+def incr_metric_total(counter: dict[str, int], site: str) -> None:
     """
     increment running metric totals to be flushed on an interval
     """
@@ -149,8 +149,8 @@ class RecHandler(APIHandler):
     @cached(cache=TTL_CACHE, key=instance_unaware_key)
     def fetch_cached_results(
         self,
+        site: str,
         source_entity_id: Optional[str] = None,
-        site: Optional[str] = None,
         model_type: Optional[str] = None,
         model_id: Optional[str] = None,
         exclude: Optional[str] = None,
@@ -168,8 +168,8 @@ class RecHandler(APIHandler):
 
     def fetch_results(self, filters: dict[str, str]) -> List[Rec]:
         results = self.fetch_cached_results(
+            site=filters["site"],
             source_entity_id=filters.get("source_entity_id"),
-            site=filters.get("site"),
             model_type=filters.get("model_type"),
             model_id=filters.get("model_id"),
             exclude=filters.get("exclude"),
