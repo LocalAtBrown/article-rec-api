@@ -134,7 +134,7 @@ class APIHandler(BaseHandler):
     def __init__(self, *args, **kwargs):
         super(APIHandler, self).__init__(*args, **kwargs)
 
-    def get_arguments(self):
+    def get_arguments_as_dict(self) -> dict:
         arguments = {k: self.get_argument(k) for k in self.request.arguments}
         arguments["size"] = arguments.get("size", DEFAULT_PAGE_SIZE)
         return arguments

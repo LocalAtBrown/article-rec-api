@@ -62,7 +62,7 @@ class ModelHandler(APIHandler):
 
     @retry_rollback
     async def get(self):
-        filters = self.get_arguments()
+        filters = self.get_arguments_as_dict()
         query = self.mapping.select()
         query = self.apply_conditions(query, **filters)
         query = self.apply_sort(query, **filters)

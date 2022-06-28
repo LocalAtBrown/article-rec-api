@@ -183,7 +183,7 @@ class RecHandler(APIHandler):
 
     @retry_rollback
     async def get(self):
-        filters = self.get_arguments()
+        filters = self.get_arguments_as_dict()
         filters["site"] = filters.get("site", DEFAULT_SITE)
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
