@@ -124,9 +124,7 @@ class RecHandler(APIHandler):
 
         return query
 
-    def validate_filters(self, **filters) -> Dict[str, str]:
-        error_msgs = {}
-
+    def validate_filters(self, **filters) -> Optional[str]:
         if "exclude" in filters:
             for exclude in filters["exclude"].split(","):
                 try:
@@ -146,7 +144,7 @@ class RecHandler(APIHandler):
             except (ValueError, AssertionError):
                 return f"Invalid input for 'size' (int), must be below {MAX_PAGE_SIZE}: {filters['size']}"
 
-        return error_msgs
+        return None
 
     @cached(cache=TTL_CACHE, key=instance_unaware_key)
     def fetch_cached_results(
