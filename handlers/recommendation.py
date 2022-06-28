@@ -166,7 +166,7 @@ class RecHandler(APIHandler):
         incr_metric_total(DB_HIT_COUNTER, site)
         return [x.to_dict() for x in query]
 
-    def fetch_results(self, **filters: Dict[str, str]) -> List[Rec]:
+    def fetch_results(self, filters: dict[str, str]) -> List[Rec]:
         results = self.fetch_cached_results(
             source_entity_id=filters.get("source_entity_id"),
             site=filters.get("site"),
@@ -188,7 +188,7 @@ class RecHandler(APIHandler):
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
 
         res = {
-            "results": self.fetch_results(**filters)
+            "results": self.fetch_results(filters)
             or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id"), int(filters["size"])),
         }
         incr_metric_total(TOTAL_HANDLED, filters["site"])
