@@ -153,6 +153,9 @@ versions. We also use [pre-commit](https://pre-commit.com/) with hooks for [isor
 [black](https://github.com/psf/black), and [flake8](https://flake8.pycqa.org/en/latest/) for consistent code style and
 readability. Note that this means code that doesn't meet the rules will fail to commit until it is fixed.
 
+We also use [mypy](https://mypy.readthedocs.io/en/stable/index.html) for static type checking. This can be run manually,
+and the CI runs it on PRs.
+
 ### Setup
 
 1. [Install Poetry](https://python-poetry.org/docs/#installation).
@@ -169,6 +172,11 @@ This is done with Poetry via the `poetry.lock` file. As for the containerized co
 ### Run Code Format and Linting
 
 To manually run isort, black, and flake8 all in one go, simply run `pre-commit run --all-files`.
+
+### Run Static Type Checking
+
+To manually run mypy, simply run `mypy` from the root directory of the project. It will use the default configuration
+specified in the mypy.ini file.
 
 ### Update Dependencies
 
