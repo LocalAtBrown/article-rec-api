@@ -2,8 +2,8 @@ import datetime
 import json
 import logging
 import time
+from collections import defaultdict
 from decimal import Decimal
-from typing import Dict, List, Tuple
 
 import tornado.web
 
@@ -12,8 +12,6 @@ from lib.config import config
 from lib.metrics import Unit, write_metric
 
 DEFAULT_PAGE_SIZE = config.get("DEFAULT_PAGE_SIZE")
-# buffer of latency values for each handler/site combination
-LATENCY_BUFFERS: Dict[Tuple[str, str], List[float]] = {}
 
 
 def unix_time_ms(datetime_instance):
@@ -39,6 +37,10 @@ class LatencyBuffer:
         _buffer = self._buffer
         self._buffer = []
         return _buffer
+
+
+# buffer of latency values for each handler/site combination
+LATENCY_BUFFERS: dict[tuple[str, str], LatencyBuffer] = defaultdict(LatencyBuffer)
 
 
 def admin_only(f):
@@ -75,8 +77,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     @property
     def site_name(self) -> str:
-        params = self.get_arguments()
-        return params.get("site", "n/a")
+        return self.get_argument("site", "n/a")
 
     def prepare(self):
         self.start_time = time.time()
@@ -92,11 +93,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def push_latency(self, latency, handler_name: str, site_name: str) -> None:
         key = (handler_name, site_name)
-        if LATENCY_BUFFERS.get(key):
-            LATENCY_BUFFERS[key].push(latency)
-        else:
-            LATENCY_BUFFERS[key] = LatencyBuffer()
-            LATENCY_BUFFERS[key].push(latency)
+        LATENCY_BUFFERS[key].push(latency)
 
     def on_finish(self):
         if self.handler_name == "Health":
@@ -137,7 +134,7 @@ class APIHandler(BaseHandler):
     def __init__(self, *args, **kwargs):
         super(APIHandler, self).__init__(*args, **kwargs)
 
-    def get_arguments(self):
+    def get_arguments_as_dict(self) -> dict:
         arguments = {k: self.get_argument(k) for k in self.request.arguments}
         arguments["size"] = arguments.get("size", DEFAULT_PAGE_SIZE)
         return arguments

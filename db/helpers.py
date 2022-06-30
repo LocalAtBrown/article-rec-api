@@ -12,7 +12,7 @@ from lib.db import db
 MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 
 
-def create_resource(mapping_class: BaseMapping, **params: dict) -> int:
+def create_resource(mapping_class: BaseMapping, **params) -> int:
     resource = mapping_class(**params)
     resource.save()
     return resource.id
@@ -23,7 +23,7 @@ def get_resource(mapping_class: BaseMapping, _id: int) -> dict:
     return instance.to_dict()
 
 
-def update_resources(mapping_class: BaseMapping, conditions: Expression, **params: dict) -> None:
+def update_resources(mapping_class: BaseMapping, conditions: Expression, **params) -> None:
     params["updated_at"] = tzaware_now()
     q = mapping_class.update(**params).where(conditions)
     q.execute()

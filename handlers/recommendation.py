@@ -19,7 +19,7 @@ MAX_PAGE_SIZE = config.get("MAX_PAGE_SIZE")
 DEFAULT_SITE = config.get("DEFAULT_SITE")
 STALE_AFTER_MIN = 15
 # each result takes roughly 50,000 bytes; 2048 cached results ~= 100 MBs
-TTL_CACHE = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
+TTL_CACHE: TTLCache = TTLCache(maxsize=2048, ttl=STALE_AFTER_MIN * 60)
 # counter of default recs served for site
 DEFAULT_REC_COUNTER: Dict[str, int] = {}
 # counter of db hits by site
@@ -28,7 +28,7 @@ DB_HIT_COUNTER: Dict[str, int] = {}
 TOTAL_HANDLED: Dict[str, int] = {}
 
 
-def incr_metric_total(counter: Dict[str, int], site: str) -> None:
+def incr_metric_total(counter: dict[str, int], site: str) -> None:
     """
     increment running metric totals to be flushed on an interval
     """
@@ -46,8 +46,8 @@ def instance_unaware_key(instance, *args, **kwargs):
 
 class DefaultRecs:
     DEFAULT_TYPE = Type.POPULARITY.value
-    _recs = {}
-    _last_updated = {}
+    _recs: dict[str, list[dict]] = {}
+    _last_updated: dict[str, datetime] = {}
 
     @classmethod
     @retry_rollback
@@ -124,9 +124,7 @@ class RecHandler(APIHandler):
 
         return query
 
-    def validate_filters(self, **filters) -> Dict[str, str]:
-        error_msgs = {}
-
+    def validate_filters(self, **filters) -> Optional[str]:
         if "exclude" in filters:
             for exclude in filters["exclude"].split(","):
                 try:
@@ -146,13 +144,13 @@ class RecHandler(APIHandler):
             except (ValueError, AssertionError):
                 return f"Invalid input for 'size' (int), must be below {MAX_PAGE_SIZE}: {filters['size']}"
 
-        return error_msgs
+        return None
 
     @cached(cache=TTL_CACHE, key=instance_unaware_key)
     def fetch_cached_results(
         self,
+        site: str,
         source_entity_id: Optional[str] = None,
-        site: Optional[str] = None,
         model_type: Optional[str] = None,
         model_id: Optional[str] = None,
         exclude: Optional[str] = None,
@@ -168,10 +166,10 @@ class RecHandler(APIHandler):
         incr_metric_total(DB_HIT_COUNTER, site)
         return [x.to_dict() for x in query]
 
-    def fetch_results(self, **filters: Dict[str, str]) -> List[Rec]:
+    def fetch_results(self, filters: dict[str, str]) -> List[Rec]:
         results = self.fetch_cached_results(
+            site=filters["site"],
             source_entity_id=filters.get("source_entity_id"),
-            site=filters.get("site"),
             model_type=filters.get("model_type"),
             model_id=filters.get("model_id"),
             exclude=filters.get("exclude"),
@@ -183,14 +181,14 @@ class RecHandler(APIHandler):
 
     @retry_rollback
     async def get(self):
-        filters = self.get_arguments()
+        filters = self.get_arguments_as_dict()
         filters["site"] = filters.get("site", DEFAULT_SITE)
         validation_errors = self.validate_filters(**filters)
         if validation_errors:
             raise tornado.web.HTTPError(status_code=400, log_message=validation_errors)
 
         res = {
-            "results": self.fetch_results(**filters)
+            "results": self.fetch_results(filters)
             or DefaultRecs.get_recs(filters["site"], filters.get("source_entity_id"), int(filters["size"])),
         }
         incr_metric_total(TOTAL_HANDLED, filters["site"])
